@@ -24,7 +24,7 @@ static int screen_w;
 static int screen_h;
 static int bytespp;
 
-int main(void)
+int main(int argc, char **argv)
 {
 	int fd;
 	int frame;
@@ -35,8 +35,16 @@ int main(void)
 	struct omapfb_plane_info pi;
 	void *fb_base;
 	unsigned long min_pan_us, max_pan_us, sum_pan_us;
+	int fb_num;
+	char str[64];
 
-	fd = open("/dev/fb0", O_RDWR);
+	if (argc == 2)
+		fb_num = atoi(argv[1]);
+	else
+		fb_num = 0;
+
+	sprintf(str, "/dev/fb%d", fb_num);
+	fd = open(str, O_RDWR);
 
 	FBCTL1(FBIOGET_VSCREENINFO, &var);
 	screen_w = var.xres;
@@ -116,7 +124,7 @@ int main(void)
 			min_pan_us = us;
 		sum_pan_us += us;
 
-		FBCTL0(OMAPFB_WAITFORVSYNC);
+		FBCTL0(OMAPFB_WAITFORGO);
 
 
 		if (var.yoffset != 0)
@@ -124,7 +132,7 @@ int main(void)
 		else
 			fb = fb_base + screen_w * screen_h * bytespp;
 
-		if (1)
+		if (0)
 		{
 			int x, y, i;
 			unsigned int *p32 = fb;
