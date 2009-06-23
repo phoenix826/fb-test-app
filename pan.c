@@ -12,13 +12,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
-#define FBCTL0(ctl) if (ioctl(fd, ctl))\
-	{ perror("fbctl0(" __FILE__ ":" TOSTRING(__LINE__) "): "); exit(1); }
-#define FBCTL1(ctl, arg1) if (ioctl(fd, ctl, arg1))\
-	{ perror("fbctl1(" __FILE__ ":" TOSTRING(__LINE__) "): "); exit(1); }
+#include "common.h"
 
 static int screen_w;
 static int screen_h;
@@ -37,6 +31,9 @@ int main(int argc, char **argv)
 	unsigned long min_pan_us, max_pan_us, sum_pan_us;
 	int fb_num;
 	char str[64];
+	enum omapfb_update_mode update_mode;
+	int manual;
+	struct omapfb_update_window upd;
 
 	if (argc == 2)
 		fb_num = atoi(argv[1]);
@@ -72,6 +69,24 @@ int main(int argc, char **argv)
 		perror("mmap: ");
 		exit(1);
 	}
+
+	upd.x = 0;
+	upd.y = 0;
+	upd.width = 864;
+	upd.height = 480;
+
+	usleep(100000);
+
+	FBCTL1(OMAPFB_GET_UPDATE_MODE, &update_mode);
+	if (update_mode == OMAPFB_MANUAL_UPDATE) {
+		printf("Manual update mode\n");
+		manual = 1;
+	} else {
+		manual = 0;
+	}
+
+	printf("entering mainloop\n");
+	usleep(100000);
 
 	frame = 0;
 	gettimeofday(&ftv1, NULL);
@@ -111,7 +126,7 @@ int main(int argc, char **argv)
 
 		gettimeofday(&tv1, NULL);
 
-		FBCTL1(FBIOPAN_DISPLAY, &var);
+//		FBCTL1(FBIOPAN_DISPLAY, &var);
 
 		gettimeofday(&tv2, NULL);
 		timersub(&tv2, &tv1, &tv);
@@ -123,9 +138,14 @@ int main(int argc, char **argv)
 		if (us < min_pan_us)
 			min_pan_us = us;
 		sum_pan_us += us;
-
-		FBCTL0(OMAPFB_WAITFORGO);
-
+#if 0
+		if (manual) {
+			FBCTL0(OMAPFB_SYNC_GFX);
+			FBCTL1(OMAPFB_UPDATE_WINDOW, &upd);
+		} else {
+			FBCTL0(OMAPFB_WAITFORGO);
+		}
+#endif
 
 		if (var.yoffset != 0)
 			fb = fb_base;
