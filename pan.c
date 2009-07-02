@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 
 		gettimeofday(&tv1, NULL);
 
-//		FBCTL1(FBIOPAN_DISPLAY, &var);
+		FBCTL1(FBIOPAN_DISPLAY, &var);
 
 		gettimeofday(&tv2, NULL);
 		timersub(&tv2, &tv1, &tv);
@@ -138,14 +138,13 @@ int main(int argc, char **argv)
 		if (us < min_pan_us)
 			min_pan_us = us;
 		sum_pan_us += us;
-#if 0
+
 		if (manual) {
 			FBCTL0(OMAPFB_SYNC_GFX);
 			FBCTL1(OMAPFB_UPDATE_WINDOW, &upd);
 		} else {
 			FBCTL0(OMAPFB_WAITFORGO);
 		}
-#endif
 
 		if (var.yoffset != 0)
 			fb = fb_base;
@@ -178,10 +177,11 @@ int main(int argc, char **argv)
 			int x, y, i;
 			unsigned int *p32 = fb;
 			unsigned short *p16 = fb;
+			const int bar_width = 40;
 			memset(fb, 0, screen_w*screen_h*bytespp);
-			x = frame % (screen_w - 20);
+			x = (frame*4) % (screen_w - bar_width);
 			for (y = 0; y < screen_h; ++y) {
-				for (i = x; i < x+20; ++i) {
+				for (i = x; i < x+bar_width; ++i) {
 					if (bytespp == 2)
 						p16[y * screen_w + i] =
 							0xffff;
