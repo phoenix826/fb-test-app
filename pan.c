@@ -66,6 +66,7 @@ static void draw_bar(struct frame_info *frame, int xpos, int width)
 			else
 				lp32[x] = 0xffffffff;
 		}
+		//usleep(4*1000);
 	}
 }
 
@@ -128,10 +129,15 @@ int main(int argc, char **argv)
 	FBCTL1(OMAPFB_SETUP_MEM, &mi);
 
 	FBCTL1(FBIOGET_VSCREENINFO, var);
-	var->xres = display_info.xres;
-	var->yres = display_info.yres;
-	var->xres_virtual = display_info.xres;
-	var->yres_virtual = display_info.yres * 2;
+	if (var->rotate == 0 || var->rotate == 2) {
+		var->xres = display_info.xres;
+		var->yres = display_info.yres;
+	} else {
+		var->xres = display_info.yres;
+		var->yres = display_info.xres;
+	}
+	var->xres_virtual = var->xres;
+	var->yres_virtual = var->yres * 2;
 	FBCTL1(FBIOPUT_VSCREENINFO, var);
 
 	FBCTL1(FBIOGET_FSCREENINFO, fix);
