@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #include <time.h>
+#include <linux/types.h>
 #include <linux/fb.h>
 #include <linux/omapfb.h>
 #include <sys/mman.h>
@@ -14,9 +15,70 @@
 
 #include "common.h"
 
-static int screen_w;
-static int screen_h;
-static int bytespp;
+struct display_info
+{
+	unsigned xres;
+	unsigned yres;
+};
+
+struct fb_info
+{
+	int fd;
+	struct fb_var_screeninfo var;
+	struct fb_fix_screeninfo fix;
+	unsigned bytespp;
+};
+
+struct frame_info
+{
+	void *addr;
+	unsigned xres, yres;
+	unsigned line_len;
+	struct fb_info *fb_info;
+};
+
+static void clear_frame(struct frame_info *frame)
+{
+	int x, y;
+
+	for (y = 0; y < frame->yres; ++y) {
+		unsigned int *lp32 = frame->addr + y * frame->line_len;
+		unsigned short *lp16 = frame->addr + y * frame->line_len;
+		for (x = 0; x < frame->xres; ++x) {
+			if (frame->fb_info->bytespp == 2)
+				lp16[x] = 0;
+			else
+				lp32[x] = 0;
+		}
+	}
+}
+
+static void draw_bar(struct frame_info *frame, int xpos, int width)
+{
+	int x, y;
+
+	for (y = 0; y < frame->yres; ++y) {
+		unsigned int *lp32 = frame->addr + y * frame->line_len;
+		unsigned short *lp16 = frame->addr + y * frame->line_len;
+		for (x = xpos; x < xpos+width; ++x) {
+			if (frame->fb_info->bytespp == 2)
+				lp16[x] = 0xffff;
+			else
+				lp32[x] = 0xffffffff;
+		}
+	}
+}
+
+static void update_window(struct fb_info *fb_info,
+		unsigned width, unsigned height)
+{
+	struct omapfb_update_window upd;
+	upd.x = 0;
+	upd.y = 0;
+	upd.width = width;
+	upd.height = height;
+	ioctl(fb_info->fd, OMAPFB_UPDATE_WINDOW, &upd);
+}
 
 int main(int argc, char **argv)
 {
@@ -24,7 +86,6 @@ int main(int argc, char **argv)
 	int frame;
 	struct timeval tv1, tv2, tv;
 	struct timeval ftv1, ftv2;
-	struct fb_var_screeninfo var;
 	struct omapfb_mem_info mi;
 	struct omapfb_plane_info pi;
 	void *fb_base;
@@ -33,7 +94,17 @@ int main(int argc, char **argv)
 	char str[64];
 	enum omapfb_update_mode update_mode;
 	int manual;
-	struct omapfb_update_window upd;
+
+	struct fb_info fb_info;
+	struct fb_var_screeninfo *var = &fb_info.var;
+	struct fb_fix_screeninfo *fix = &fb_info.fix;
+
+	struct frame_info frame1, frame2;
+	struct display_info display_info;
+
+	display_info.xres = 864;
+	display_info.yres = 480;
+
 
 	if (argc == 2)
 		fb_num = atoi(argv[1]);
@@ -42,38 +113,49 @@ int main(int argc, char **argv)
 
 	sprintf(str, "/dev/fb%d", fb_num);
 	fd = open(str, O_RDWR);
+	fb_info.fd = fd;
 
-	FBCTL1(FBIOGET_VSCREENINFO, &var);
-	screen_w = var.xres;
-	screen_h = var.yres;
-	bytespp = var.bits_per_pixel / 8;
+	FBCTL1(FBIOGET_VSCREENINFO, var);
+	fb_info.bytespp = var->bits_per_pixel / 8;
 
 	FBCTL1(OMAPFB_QUERY_PLANE, &pi);
 	pi.enabled = 0;
 	FBCTL1(OMAPFB_SETUP_PLANE, &pi);
 
 	FBCTL1(OMAPFB_QUERY_MEM, &mi);
-	mi.size = screen_w * screen_h * bytespp * 2;
+	mi.size = display_info.xres * (display_info.yres + 32) *
+		fb_info.bytespp * 2;
 	FBCTL1(OMAPFB_SETUP_MEM, &mi);
 
-	FBCTL1(FBIOGET_VSCREENINFO, &var);
-	var.yres_virtual = var.yres * 2;
-	FBCTL1(FBIOPUT_VSCREENINFO, &var);
+	FBCTL1(FBIOGET_VSCREENINFO, var);
+	var->xres = display_info.xres;
+	var->yres = display_info.yres;
+	var->xres_virtual = display_info.xres;
+	var->yres_virtual = display_info.yres * 2;
+	FBCTL1(FBIOPUT_VSCREENINFO, var);
+
+	FBCTL1(FBIOGET_FSCREENINFO, fix);
 
 	pi.enabled = 1;
 	FBCTL1(OMAPFB_SETUP_PLANE, &pi);
 
-	fb_base = mmap(NULL, mi.size, PROT_READ | PROT_WRITE, MAP_SHARED,
+	fb_base = mmap(NULL, fix->line_length * var->yres_virtual,
+			PROT_READ | PROT_WRITE, MAP_SHARED,
 			fd, 0);
 	if (fb_base == MAP_FAILED) {
 		perror("mmap: ");
 		exit(1);
 	}
 
-	upd.x = 0;
-	upd.y = 0;
-	upd.width = 864;
-	upd.height = 480;
+	frame1.addr = fb_base;
+	frame1.xres = var->xres;
+	frame1.yres = var->yres;
+	frame1.line_len = fix->line_length;
+	frame1.fb_info = &fb_info;
+
+	frame2 = frame1;
+	frame2.addr = fb_base + frame1.yres * frame1.line_len;
+
 
 	usleep(100000);
 
@@ -96,7 +178,7 @@ int main(int argc, char **argv)
 	while (1) {
 		const int num_frames = 100;
 		unsigned long us;
-		void *fb;
+		struct frame_info *current_frame;
 
 		if (frame > 0 && frame % num_frames == 0) {
 			unsigned long ms;
@@ -118,15 +200,18 @@ int main(int argc, char **argv)
 			sum_pan_us = 0;
 		}
 
-		if (frame % 2 == 0)
-			var.yoffset = 0;
-		else
-			var.yoffset = var.yres;
+		if (frame % 2 == 0) {
+			current_frame = &frame2;
+			var->yoffset = 0;
+		} else {
+			current_frame = &frame1;
+			var->yoffset = var->yres;
+		}
 		frame++;
 
 		gettimeofday(&tv1, NULL);
 
-		FBCTL1(FBIOPAN_DISPLAY, &var);
+		FBCTL1(FBIOPAN_DISPLAY, var);
 
 		gettimeofday(&tv2, NULL);
 		timersub(&tv2, &tv1, &tv);
@@ -141,16 +226,14 @@ int main(int argc, char **argv)
 
 		if (manual) {
 			FBCTL0(OMAPFB_SYNC_GFX);
-			FBCTL1(OMAPFB_UPDATE_WINDOW, &upd);
+			update_window(&fb_info, display_info.xres,
+					display_info.yres);
 		} else {
 			FBCTL0(OMAPFB_WAITFORGO);
+			//FBCTL0(OMAPFB_WAITFORVSYNC);
 		}
 
-		if (var.yoffset != 0)
-			fb = fb_base;
-		else
-			fb = fb_base + screen_w * screen_h * bytespp;
-
+#if 0
 		if (0)
 		{
 			int x, y, i;
@@ -172,25 +255,22 @@ int main(int argc, char **argv)
 				msync(fb, screen_w*screen_h*bytespp, MS_SYNC);
 			}
 		}
+#endif
 
 		if (1) {
-			int x, y, i;
-			unsigned int *p32 = fb;
-			unsigned short *p16 = fb;
+			int bar_xpos;
 			const int bar_width = 40;
-			memset(fb, 0, screen_w*screen_h*bytespp);
-			x = (frame*4) % (screen_w - bar_width);
-			for (y = 0; y < screen_h; ++y) {
-				for (i = x; i < x+bar_width; ++i) {
-					if (bytespp == 2)
-						p16[y * screen_w + i] =
-							0xffff;
-					else
-						p32[y * screen_w + i] =
-							0xffffffff;
-				}
-			}
-			msync(fb, screen_w*screen_h*bytespp, MS_SYNC);
+			const int speed = 10;
+
+			clear_frame(current_frame);
+
+			bar_xpos = (frame * speed) % (var->xres - bar_width);
+
+			draw_bar(current_frame, bar_xpos, bar_width);
+
+			msync(current_frame->addr,
+					current_frame->line_len * current_frame->yres,
+					MS_SYNC);
 		}
 	}
 

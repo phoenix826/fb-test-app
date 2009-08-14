@@ -1,6 +1,6 @@
 
 CC=$(CROSS_COMPILE)gcc
-CFLAGS=-I/home/valkeine/work/linux/include -O2 -Wall
+CFLAGS=-I/home/valkeine/work/linux/usr/include -O2 -Wall
 
 all: pan readback upd
 
