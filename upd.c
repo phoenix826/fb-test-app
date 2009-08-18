@@ -52,13 +52,8 @@ int main(int argc, char** argv)
 {
 	int fd;
 	int x, y, w, h;
-	struct omapfb_vram_info vram;
 
 	fd = open_fb("/dev/fb0");
-
-
-	FBCTL1(OMAPFB_GET_VRAM_INFO, &vram);
-printf("%d, %d, %d\n", vram.total, vram.free, vram.largest_free_block);
 
 	FBCTL1(FBIOGET_VSCREENINFO, &var);
 	FBCTL1(FBIOGET_FSCREENINFO, &fix);

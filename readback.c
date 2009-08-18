@@ -36,12 +36,39 @@ static void readmem(int fd, int x, int y, int w, int h)
 
 	if (len > 0) {
 		int ffd;
-		fprintf(stderr, "writing to buf.raw\n");
-		ffd = open("buf.raw", O_WRONLY | O_CREAT | O_TRUNC);
+		fprintf(stderr, "writing to buf-24.raw\n");
+		ffd = open("buf-24.raw", O_WRONLY | O_CREAT | O_TRUNC);
 		if (ffd < 0)
 			printf("open failed\n");
 		write(ffd, mr.buffer, len);
 		close(ffd);
+	}
+
+	if (len > 0) {
+		int ffd;
+		int i;
+		unsigned char *buf, *p1, *p2;
+		fprintf(stderr, "writing to buf-32.raw\n");
+		ffd = open("buf-32.raw", O_WRONLY | O_CREAT | O_TRUNC);
+		if (ffd < 0)
+			printf("open failed\n");
+		buf = malloc(len * 4 / 3);
+		p1 = mr.buffer;
+		p2 = buf;
+		for (i = 0; i < len; i += 3)
+		{
+			p2[0] = p1[2];
+			p2[1] = p1[1];
+			p2[2] = p1[0];
+			p2[3] = 0;
+			p1 += 3;
+			p2 += 4;
+		}
+
+		write(ffd, buf, len * 4 / 3);
+
+		close(ffd);
+		free(buf);
 	}
 
 	free(mr.buffer);
