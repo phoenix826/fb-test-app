@@ -19,7 +19,7 @@ static void readmem(int fd, int x, int y, int w, int h)
 {
 	struct omapfb_memory_read mr;
 	int len;
-	int bytespp = var.bits_per_pixel / 8;
+	int bytespp = 3;
 
 	mr.buffer_size = w * h * bytespp;
 	mr.buffer = malloc(mr.buffer_size);
