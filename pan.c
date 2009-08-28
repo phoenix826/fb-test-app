@@ -39,17 +39,13 @@ struct frame_info
 
 static void clear_frame(struct frame_info *frame)
 {
-	int x, y;
+	int y;
+
+	void *p = frame->addr;
 
 	for (y = 0; y < frame->yres; ++y) {
-		unsigned int *lp32 = frame->addr + y * frame->line_len;
-		unsigned short *lp16 = frame->addr + y * frame->line_len;
-		for (x = 0; x < frame->xres; ++x) {
-			if (frame->fb_info->bytespp == 2)
-				lp16[x] = 0;
-			else
-				lp32[x] = 0;
-		}
+		memset(p, 0, frame->xres * frame->fb_info->bytespp);
+		p += frame->line_len;
 	}
 }
 
