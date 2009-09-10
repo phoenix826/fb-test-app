@@ -91,6 +91,7 @@ int main(int argc, char **argv)
 	char str[64];
 	enum omapfb_update_mode update_mode;
 	int manual;
+	struct omapfb_caps caps;
 
 	struct fb_info fb_info;
 	struct fb_var_screeninfo *var = &fb_info.var;
@@ -167,6 +168,14 @@ int main(int argc, char **argv)
 		manual = 1;
 	} else {
 		manual = 0;
+	}
+
+	FBCTL1(OMAPFB_GET_CAPS, &caps);
+	if (caps.ctrl & OMAPFB_CAPS_TEARSYNC) {
+		struct omapfb_tearsync_info tear;
+		printf("Enabling TE\n");
+		tear.enabled = 1;
+		FBCTL1(OMAPFB_SET_TEARSYNC, &tear);
 	}
 
 	printf("entering mainloop\n");
