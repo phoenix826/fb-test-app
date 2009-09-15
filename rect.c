@@ -14,6 +14,8 @@
 #include <linux/fb.h>
 #include <linux/omapfb.h>
 
+//#define READBACK
+
 #define ERROR(x) printf("fbtest error in line %s:%d: %s\n", __FUNCTION__, __LINE__, strerror(errno));
 
 #define FBCTL(cmd, arg)			\
@@ -127,11 +129,11 @@ static void draw_pixel(void *fbmem, int x, int y, unsigned int color)
 	}
 }
 
-static void fill_rect(int *fb, const struct rect *r)
+static unsigned fill_rect(int *fb, const struct rect *r)
 {
 	short x,y;
 
-	const int color = rand() % (0xffffff+1);
+	int color = rand() % (0xffffff+1);
 	const int max_w = r->x + r->w;
 	const int max_h = r->y + r->h;
 
@@ -147,6 +149,8 @@ static void fill_rect(int *fb, const struct rect *r)
 				draw_pixel(fb, x, y, color);
 		}
 	}
+
+	return color;
 }
 
 void fill_screen(void *fbmem)
@@ -171,11 +175,62 @@ void fill_screen(void *fbmem)
 	}
 }
 
+static void checkrect(int fd, int x, int y, int w, int h,
+		void *buf, unsigned buf_size, unsigned color)
+{
+	struct omapfb_memory_read mr;
+	int len;
+	int i;
+	unsigned char *b8 = buf;
+
+	mr.buffer = buf;
+	mr.buffer_size = buf_size;
+	mr.x = x;
+	mr.y = y;
+	mr.w = w;
+	mr.h = h;
+
+	len = ioctl(fd, OMAPFB_MEMORY_READ, &mr);
+
+	//fprintf(stderr, "read returned %d bytes, asked %d\n", len, w * h * 3);
+
+	if (len == 0) {
+		printf("FAIL\n");
+		exit(1);
+	}
+
+	for (i = 0; i < w * h * 3; i += 3) {
+		unsigned r = b8[i + 0];
+		unsigned g = b8[i + 1];
+		unsigned b = b8[i + 2];
+		unsigned c = (r << 16) | (g << 8) | b;
+		unsigned x = (i / 3) % w;
+		unsigned y = (i / 3) / w;
+		unsigned expect;
+
+		if (x == y)
+			expect = ~color & 0xffffff;
+		else
+			expect = color;
+
+		if (expect == c)
+			continue;
+
+		printf("fail at %d, %d\n", x, y);
+		printf("read %08x, expected %08x\n", c, expect);
+		exit(1);
+	}
+}
+
 int main(int argc, char** argv)
 {
 	int fd;
 	struct rect r;
 	int i;
+	void *readbuf;
+	const unsigned readbuf_size = 864 * 480 * 3;
+
+	readbuf = malloc(readbuf_size);
 
 	fd = open_fb("/dev/fb0");
 
@@ -194,17 +249,23 @@ int main(int argc, char** argv)
 	srand((unsigned int)time(NULL) + getpid());
 
 	fill_screen(ptr);
+	fb_update_window(fd, 0, 0, 864, 480);
 
 	for (i = 0; 1 || i < 10000; i++) {
+		unsigned color;
+
 		get_rand_rect(&r,
 				var.xres_virtual, var.yres_virtual,
 				2, 0,
 				var.xres_virtual, var.yres_virtual);
 
-		fill_rect(ptr, &r);
+		color = fill_rect(ptr, &r);
+
 		fb_update_window(fd, r.x, r.y, r.w, r.h);
-		//fb_update_window(fd, 302, 116, 445, 190);
-		//usleep(10000);
+
+#ifdef READBACK
+		checkrect(fd, r.x, r.y, r.w, r.h, readbuf, readbuf_size, color);
+#endif
 	}
 
 	return 0;
