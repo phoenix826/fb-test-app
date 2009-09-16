@@ -28,8 +28,9 @@
 		ERROR("ioctl failed");	\
 		exit(1); }
 
-struct fb_var_screeninfo var;
-struct fb_fix_screeninfo fix;
+static struct fb_var_screeninfo var;
+static struct fb_fix_screeninfo fix;
+static int manual;
 
 int open_fb(const char* dev)
 {
@@ -47,6 +48,9 @@ int open_fb(const char* dev)
 static int fb_update_window(int fd, short x, short y, short w, short h)
 {
 	struct omapfb_update_window uw;
+
+	if (!manual)
+		return 0;
 
 	uw.x = x;
 	uw.y = y;
@@ -229,6 +233,7 @@ int main(int argc, char** argv)
 	int i;
 	void *readbuf;
 	const unsigned readbuf_size = 864 * 480 * 3;
+	enum omapfb_update_mode update_mode;
 
 	readbuf = malloc(readbuf_size);
 
@@ -247,6 +252,9 @@ int main(int argc, char** argv)
 	}
 
 	srand((unsigned int)time(NULL) + getpid());
+
+	FBCTL(OMAPFB_GET_UPDATE_MODE, &update_mode);
+	manual = update_mode == OMAPFB_MANUAL_UPDATE;
 
 	fill_screen(ptr);
 	fb_update_window(fd, 0, 0, 864, 480);
