@@ -150,13 +150,26 @@ void fill_screen(void *fbmem)
 
 int main(int argc, char** argv)
 {
+	int fb_num;
+	char str[64];
 	int fd;
 	enum omapfb_update_mode update_mode;
 
-	fd = open_fb("/dev/fb0");
+	if (argc == 2)
+		fb_num = atoi(argv[1]);
+	else
+		fb_num = 0;
+
+	sprintf(str, "/dev/fb%d", fb_num);
+	fd = open(str, O_RDWR);
 
 	FBCTL(FBIOGET_VSCREENINFO, &var);
 	FBCTL(FBIOGET_FSCREENINFO, &fix);
+
+	printf("res %d,%d virtual %d,%d, line_len %d\n",
+			var.xres, var.yres,
+			var.xres_virtual, var.yres_virtual,
+			fix.line_length);
 
 	void* ptr = mmap(0, var.yres_virtual * fix.line_length,
 			PROT_WRITE | PROT_READ,
