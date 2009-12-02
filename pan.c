@@ -188,7 +188,6 @@ int main(int argc, char **argv)
 	struct omapfb_mem_info mi;
 	struct omapfb_plane_info pi;
 	void *fb_base;
-	int fb_num;
 	char str[64];
 	enum omapfb_update_mode update_mode;
 	int manual;
@@ -200,22 +199,53 @@ int main(int argc, char **argv)
 
 	struct frame_info frame1, frame2;
 
-	if (argc == 2)
-		fb_num = atoi(argv[1]);
-	else
-		fb_num = 0;
+	int opt;
+	int req_fb = 0;
+	int req_bitspp = 32;
+	int req_yuv = 0;
+	int req_rot = 0;
 
-	sprintf(str, "/dev/fb%d", fb_num);
+	while ((opt = getopt(argc, argv, "f:r:m:y:")) != -1) {
+		switch (opt) {
+		case 'f':
+			req_fb = atoi(optarg);
+			break;
+		case 'r':
+			req_rot = atoi(optarg);
+			break;
+		case 'm':
+			req_bitspp = atoi(optarg);
+			break;
+		case 'y':
+			req_yuv = atoi(optarg);
+			break;
+		default:
+			printf("usage: -f <fbnum> -r <rot> -m <bitspp> "
+					"-y <yuv>\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	if (req_yuv != 0 && req_fb == 0) {
+		printf("GFX overlay doesn't support YUV\n");
+		return -1;
+	}
+
+	sprintf(str, "/dev/fb%d", req_fb);
 	fd = open(str, O_RDWR);
 	fb_info.fd = fd;
-
-	FBCTL1(FBIOGET_VSCREENINFO, var);
-	fb_info.bytespp = var->bits_per_pixel / 8;
 
 	/* disable overlay */
 	FBCTL1(OMAPFB_QUERY_PLANE, &pi);
 	pi.enabled = 0;
 	FBCTL1(OMAPFB_SETUP_PLANE, &pi);
+
+	if (req_bitspp != 0) {
+		fb_info.bytespp = req_bitspp / 8;
+	} else {
+		FBCTL1(FBIOGET_VSCREENINFO, var);
+		fb_info.bytespp = var->bits_per_pixel / 8;
+	}
 
 	/* allocate memory */
 	FBCTL1(OMAPFB_QUERY_MEM, &mi);
@@ -225,6 +255,7 @@ int main(int argc, char **argv)
 
 	/* setup var info */
 	FBCTL1(FBIOGET_VSCREENINFO, var);
+	var->rotate = req_rot;
 	if (var->rotate == 0 || var->rotate == 2) {
 		var->xres = frame_xres;
 		var->yres = frame_yres;
@@ -234,6 +265,13 @@ int main(int argc, char **argv)
 	}
 	var->xres_virtual = var->xres;
 	var->yres_virtual = var->yres * 2;
+	var->bits_per_pixel = fb_info.bytespp * 8;
+	if (req_yuv == 1)
+		var->nonstd = OMAPFB_COLOR_YUV422;
+	else if (req_yuv == 2)
+		var->nonstd = OMAPFB_COLOR_YUY422;
+	else
+		var->nonstd = 0;
 	FBCTL1(FBIOPUT_VSCREENINFO, var);
 
 	/* setup overlay */
