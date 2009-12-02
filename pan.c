@@ -15,11 +15,30 @@
 
 #include "common.h"
 
-struct display_info
-{
-	unsigned xres;
-	unsigned yres;
-};
+#if 0
+const unsigned display_yres = 864;
+const unsigned display_xres = 480;
+
+const unsigned frame_xres = 1280;
+const unsigned frame_yres = 720;
+//const unsigned frame_xres = 864;
+//const unsigned frame_yres = 480;
+
+const unsigned ovl_yres = 864;
+const unsigned ovl_xres = 480;
+
+#else
+
+const unsigned display_xres = 480;
+const unsigned display_yres = 640;
+
+const unsigned frame_xres = 480;
+const unsigned frame_yres = 640;
+
+const unsigned ovl_xres = 480;
+const unsigned ovl_yres = 640;
+
+#endif
 
 struct fb_info
 {
@@ -44,8 +63,32 @@ static void clear_frame(struct frame_info *frame)
 	void *p = frame->addr;
 
 	for (y = 0; y < frame->yres; ++y) {
-		memset(p, 0, frame->xres * frame->fb_info->bytespp);
+		if (y == 10)
+			memset(p, 0xff, frame->xres * frame->fb_info->bytespp);
+		else if (y == frame->yres - 10)
+			memset(p, 0xff, frame->xres * frame->fb_info->bytespp);
+		else
+			memset(p, 0, frame->xres * frame->fb_info->bytespp);
 		p += frame->line_len;
+	}
+}
+
+static void mess_frame(struct frame_info *frame)
+{
+	int x, y;
+
+	for (y = 0; y < frame->yres; ++y) {
+		unsigned int *lp32 = frame->addr + y * frame->line_len;
+		unsigned short *lp16 = frame->addr + y * frame->line_len;
+
+		for (x = 0; x < frame->xres; ++x) {
+
+			if (frame->fb_info->bytespp == 2)
+				lp16[x] = x*y;
+			else
+				lp32[x] = x*y;
+
+		}
 	}
 }
 
@@ -62,7 +105,6 @@ static void draw_bar(struct frame_info *frame, int xpos, int width)
 			else
 				lp32[x] = 0xffffffff;
 		}
-		//usleep(4*1000);
 	}
 }
 
@@ -77,16 +119,75 @@ static void update_window(struct fb_info *fb_info,
 	ioctl(fb_info->fd, OMAPFB_UPDATE_WINDOW, &upd);
 }
 
+static unsigned long min_pan_us, max_pan_us, sum_pan_us;
+static struct timeval tv1;
+static struct timeval ftv1;
+
+static void init_perf()
+{
+	gettimeofday(&ftv1, NULL);
+	min_pan_us = 0xffffffff;
+	max_pan_us = 0;
+	sum_pan_us = 0;
+}
+
+static void perf_frame(int frame)
+{
+	const int num_frames = 100;
+	unsigned long ms;
+	struct timeval ftv2, tv;
+
+	if (frame > 0 && frame % num_frames == 0) {
+		gettimeofday(&ftv2, NULL);
+		timersub(&ftv2, &ftv1, &tv);
+
+		ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+		printf("%d frames in %lu ms, %lu fps, "
+				"pan min %lu, max %lu, avg %lu\n",
+				num_frames,
+				ms, num_frames * 1000 / ms,
+				min_pan_us, max_pan_us,
+				sum_pan_us / num_frames);
+
+		gettimeofday(&ftv1, NULL);
+		min_pan_us = 0xffffffff;
+		max_pan_us = 0;
+		sum_pan_us = 0;
+	}
+}
+
+void perf_pan_start()
+{
+	gettimeofday(&tv1, NULL);
+}
+
+void perf_pan_stop()
+{
+	unsigned long us;
+	struct timeval tv2, tv;
+
+	gettimeofday(&tv2, NULL);
+	timersub(&tv2, &tv1, &tv);
+
+	us = tv.tv_sec * 1000000 + tv.tv_usec;
+
+	if (us > max_pan_us)
+		max_pan_us = us;
+	if (us < min_pan_us)
+		min_pan_us = us;
+	sum_pan_us += us;
+
+}
+
+
 int main(int argc, char **argv)
 {
 	int fd;
 	int frame;
-	struct timeval tv1, tv2, tv;
-	struct timeval ftv1, ftv2;
 	struct omapfb_mem_info mi;
 	struct omapfb_plane_info pi;
 	void *fb_base;
-	unsigned long min_pan_us, max_pan_us, sum_pan_us;
 	int fb_num;
 	char str[64];
 	enum omapfb_update_mode update_mode;
@@ -98,11 +199,6 @@ int main(int argc, char **argv)
 	struct fb_fix_screeninfo *fix = &fb_info.fix;
 
 	struct frame_info frame1, frame2;
-	struct display_info display_info;
-
-	display_info.xres = 864;
-	display_info.yres = 480;
-
 
 	if (argc == 2)
 		fb_num = atoi(argv[1]);
@@ -116,32 +212,39 @@ int main(int argc, char **argv)
 	FBCTL1(FBIOGET_VSCREENINFO, var);
 	fb_info.bytespp = var->bits_per_pixel / 8;
 
+	/* disable overlay */
 	FBCTL1(OMAPFB_QUERY_PLANE, &pi);
 	pi.enabled = 0;
 	FBCTL1(OMAPFB_SETUP_PLANE, &pi);
 
+	/* allocate memory */
 	FBCTL1(OMAPFB_QUERY_MEM, &mi);
-	mi.size = display_info.xres * (display_info.yres + 32) *
-		fb_info.bytespp * 2;
+	mi.size = frame_xres * frame_yres *
+		fb_info.bytespp * 2 * 2;
 	FBCTL1(OMAPFB_SETUP_MEM, &mi);
 
+	/* setup var info */
 	FBCTL1(FBIOGET_VSCREENINFO, var);
 	if (var->rotate == 0 || var->rotate == 2) {
-		var->xres = display_info.xres;
-		var->yres = display_info.yres;
+		var->xres = frame_xres;
+		var->yres = frame_yres;
 	} else {
-		var->xres = display_info.yres;
-		var->yres = display_info.xres;
+		var->xres = frame_yres;
+		var->yres = frame_xres;
 	}
 	var->xres_virtual = var->xres;
 	var->yres_virtual = var->yres * 2;
 	FBCTL1(FBIOPUT_VSCREENINFO, var);
 
+	/* setup overlay */
 	FBCTL1(FBIOGET_FSCREENINFO, fix);
-
+	pi.out_width = ovl_xres;
+	pi.out_height = ovl_yres;
 	pi.enabled = 1;
 	FBCTL1(OMAPFB_SETUP_PLANE, &pi);
 
+	printf("mmap %u * %u = %u\n", fix->line_length, var->yres_virtual,
+			fix->line_length * var->yres_virtual);
 	fb_base = mmap(NULL, fix->line_length * var->yres_virtual,
 			PROT_READ | PROT_WRITE, MAP_SHARED,
 			fd, 0);
@@ -182,34 +285,13 @@ int main(int argc, char **argv)
 	usleep(100000);
 
 	frame = 0;
-	gettimeofday(&ftv1, NULL);
-	min_pan_us = 0xffffffff;
-	max_pan_us = 0;
-	sum_pan_us = 0;
+
+	init_perf();
+
 	while (1) {
-		const int num_frames = 100;
-		unsigned long us;
 		struct frame_info *current_frame;
 
-		if (frame > 0 && frame % num_frames == 0) {
-			unsigned long ms;
-			gettimeofday(&ftv2, NULL);
-			timersub(&ftv2, &ftv1, &tv);
-
-			ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-
-			printf("%d frames in %lu ms, %lu fps, "
-					"pan min %lu, max %lu, avg %lu\n",
-					num_frames,
-					ms, num_frames * 1000 / ms,
-					min_pan_us, max_pan_us,
-					sum_pan_us / num_frames);
-
-			gettimeofday(&ftv1, NULL);
-			min_pan_us = 0xffffffff;
-			max_pan_us = 0;
-			sum_pan_us = 0;
-		}
+		perf_frame(frame);
 
 		if (frame % 2 == 0) {
 			current_frame = &frame2;
@@ -220,68 +302,43 @@ int main(int argc, char **argv)
 		}
 		frame++;
 
-		gettimeofday(&tv1, NULL);
+		perf_pan_start();
 
 		FBCTL1(FBIOPAN_DISPLAY, var);
 
-		gettimeofday(&tv2, NULL);
-		timersub(&tv2, &tv1, &tv);
-
-		us = tv.tv_sec * 1000000 + tv.tv_usec;
-
-		if (us > max_pan_us)
-			max_pan_us = us;
-		if (us < min_pan_us)
-			min_pan_us = us;
-		sum_pan_us += us;
+		perf_pan_stop();
 
 		if (manual) {
 			FBCTL0(OMAPFB_SYNC_GFX);
-			update_window(&fb_info, display_info.xres,
-					display_info.yres);
+			update_window(&fb_info, display_xres,
+					display_yres);
 		} else {
 			FBCTL0(OMAPFB_WAITFORGO);
 			//FBCTL0(OMAPFB_WAITFORVSYNC);
 		}
 
-#if 0
 		if (0)
 		{
-			int x, y, i;
-			unsigned int *p32 = fb;
-			unsigned short *p16 = fb;
-			x = frame % (screen_w - 20);
+			struct frame_info *prev_frame;
 
-			memset(fb, 0xff, screen_w*screen_h*bytespp);
+			if (current_frame == &frame1)
+				prev_frame = &frame2;
+			else
+				prev_frame = &frame1;
 
-			for (i = 0; i < 20; ++i) {
-				for (y = 0; y < screen_h; ++y) {
-					if (bytespp == 2)
-						p16[y * screen_w + x] =
-							random();
-					else
-						p32[y * screen_w + x] =
-							random();
-				}
-				msync(fb, screen_w*screen_h*bytespp, MS_SYNC);
-			}
+			FBCTL0(OMAPFB_SYNC_GFX);
+			mess_frame(prev_frame);
 		}
-#endif
 
 		if (1) {
-			int bar_xpos;
 			const int bar_width = 40;
 			const int speed = 10;
+			int bar_xpos = (frame * speed) %
+				(var->xres - bar_width);
 
 			clear_frame(current_frame);
 
-			bar_xpos = (frame * speed) % (var->xres - bar_width);
-
 			draw_bar(current_frame, bar_xpos, bar_width);
-
-			msync(current_frame->addr,
-					current_frame->line_len * current_frame->yres,
-					MS_SYNC);
 		}
 	}
 
