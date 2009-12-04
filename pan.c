@@ -16,17 +16,18 @@
 
 #include "common.h"
 
-#if 0
-const unsigned display_yres = 864;
-const unsigned display_xres = 480;
+#if 1
+const unsigned display_xres = 864;
+const unsigned display_yres = 480;
 
-const unsigned frame_xres = 1280;
-const unsigned frame_yres = 720;
-//const unsigned frame_xres = 864;
-//const unsigned frame_yres = 480;
+const unsigned frame_xres = 864;
+const unsigned frame_yres = 480;
 
-const unsigned ovl_yres = 864;
-const unsigned ovl_xres = 480;
+const unsigned frame_vxres = 1024;
+const unsigned frame_vyres = 1024;
+
+const unsigned ovl_xres = 864;
+const unsigned ovl_yres = 480;
 
 #else
 
@@ -269,8 +270,9 @@ int main(int argc, char **argv)
 	frame = 0;
 	init_perf();
 
+	mess_frame(&frame1);
+
 	while (1) {
-		struct frame_info *current_frame = &frame1;
 		float d;
 
 		perf_frame(frame);
@@ -291,7 +293,7 @@ int main(int argc, char **argv)
 		else
 			var->xoffset = (int)d;
 
-		printf("xo %d, yo %d\n", var->xoffset, var->yoffset);
+		//printf("xo %d, yo %d\n", var->xoffset, var->yoffset);
 		FBCTL1(FBIOPAN_DISPLAY, var);
 
 		if (manual) {
@@ -303,7 +305,6 @@ int main(int argc, char **argv)
 			//FBCTL0(OMAPFB_WAITFORVSYNC);
 		}
 
-		mess_frame(current_frame);
 	}
 
 	close(fd);

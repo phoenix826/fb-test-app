@@ -15,17 +15,15 @@
 
 #include "common.h"
 
-#if 0
-const unsigned display_yres = 864;
-const unsigned display_xres = 480;
+#if 1
+const unsigned display_xres = 864;
+const unsigned display_yres = 480;
 
-const unsigned frame_xres = 1280;
-const unsigned frame_yres = 720;
-//const unsigned frame_xres = 864;
-//const unsigned frame_yres = 480;
+const unsigned frame_xres = 864;
+const unsigned frame_yres = 480;
 
-const unsigned ovl_yres = 864;
-const unsigned ovl_xres = 480;
+const unsigned ovl_xres = 864;
+const unsigned ovl_yres = 480;
 
 #else
 
@@ -338,6 +336,7 @@ int main(int argc, char **argv)
 			current_frame = &frame1;
 			var->yoffset = var->yres;
 		}
+
 		frame++;
 
 		perf_pan_start();
