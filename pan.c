@@ -16,34 +16,17 @@
 
 #include "common.h"
 
-#if 1
-const unsigned display_xres = 864;
-const unsigned display_yres = 480;
+static unsigned display_xres;
+static unsigned display_yres;
 
-const unsigned frame_xres = 864;
-const unsigned frame_yres = 480;
+static unsigned frame_xres;
+static unsigned frame_yres;
+
+static unsigned ovl_xres;
+static unsigned ovl_yres;
 
 const unsigned frame_vxres = 1024;
 const unsigned frame_vyres = 1024;
-
-const unsigned ovl_xres = 864;
-const unsigned ovl_yres = 480;
-
-#else
-
-const unsigned display_xres = 480;
-const unsigned display_yres = 640;
-
-const unsigned frame_xres = 480;
-const unsigned frame_yres = 640;
-
-const unsigned frame_vxres = 800;
-const unsigned frame_vyres = 800;
-
-const unsigned ovl_xres = 480;
-const unsigned ovl_yres = 640;
-
-#endif
 
 struct fb_info
 {
@@ -142,6 +125,7 @@ int main(int argc, char **argv)
 	struct fb_info fb_info;
 	struct fb_var_screeninfo *var = &fb_info.var;
 	struct fb_fix_screeninfo *fix = &fb_info.fix;
+	struct omapfb_display_info di;
 
 	struct frame_info frame1;
 
@@ -180,6 +164,16 @@ int main(int argc, char **argv)
 	sprintf(str, "/dev/fb%d", req_fb);
 	fd = open(str, O_RDWR);
 	fb_info.fd = fd;
+
+	FBCTL1(OMAPFB_GET_DISPLAY_INFO, &di);
+	display_xres = di.xres;
+	display_yres = di.yres;
+
+	frame_xres = display_xres;
+	frame_yres = display_yres;
+
+	ovl_xres = display_xres;
+	ovl_yres = display_yres;
 
 	/* disable overlay */
 	FBCTL1(OMAPFB_QUERY_PLANE, &pi);

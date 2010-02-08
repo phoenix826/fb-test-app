@@ -16,9 +16,6 @@
 
 #include "common.h"
 
-struct fb_var_screeninfo var;
-struct fb_fix_screeninfo fix;
-
 int open_fb(const char* dev)
 {
 	int fd = -1;
@@ -52,17 +49,17 @@ int main(int argc, char** argv)
 {
 	int fd;
 	int x, y, w, h;
+	struct omapfb_display_info di;
 
 	fd = open_fb("/dev/fb0");
 
-	FBCTL1(FBIOGET_VSCREENINFO, &var);
-	FBCTL1(FBIOGET_FSCREENINFO, &fix);
+	FBCTL1(OMAPFB_GET_DISPLAY_INFO, &di);
 
 	if (argc != 5) {
 		x = 0;
 		y = 0;
-		w = var.xres;
-		h = var.yres;
+		w = di.xres;
+		h = di.yres;
 	} else {
 		x = atoi(argv[1]);
 		y = atoi(argv[2]);

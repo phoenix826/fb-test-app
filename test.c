@@ -170,6 +170,7 @@ int main(int argc, char** argv)
 			var.xres, var.yres,
 			var.xres_virtual, var.yres_virtual,
 			fix.line_length);
+	printf("dim %d,%d\n", var.width, var.height);
 
 	void* ptr = mmap(0, var.yres_virtual * fix.line_length,
 			PROT_WRITE | PROT_READ,
