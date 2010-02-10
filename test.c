@@ -154,6 +154,7 @@ int main(int argc, char** argv)
 	char str[64];
 	int fd;
 	enum omapfb_update_mode update_mode;
+	struct omapfb_display_info di;
 
 	if (argc == 2)
 		fb_num = atoi(argv[1]);
@@ -162,6 +163,8 @@ int main(int argc, char** argv)
 
 	sprintf(str, "/dev/fb%d", fb_num);
 	fd = open(str, O_RDWR);
+
+	FBCTL(OMAPFB_GET_DISPLAY_INFO, &di);
 
 	FBCTL(FBIOGET_VSCREENINFO, &var);
 	FBCTL(FBIOGET_FSCREENINFO, &fix);
@@ -185,7 +188,7 @@ int main(int argc, char** argv)
 
 	FBCTL(OMAPFB_GET_UPDATE_MODE, &update_mode);
 	if (update_mode == OMAPFB_MANUAL_UPDATE)
-		fb_update_window(fd, 0, 0, 864, 480);
+		fb_update_window(fd, 0, 0, di.xres, di.yres);
 
 	return 0;
 }
