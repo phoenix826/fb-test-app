@@ -232,15 +232,18 @@ int main(int argc, char** argv)
 	struct rect r;
 	int i;
 	void *readbuf;
-	const unsigned readbuf_size = 864 * 480 * 3;
+	struct omapfb_display_info di;
+	unsigned readbuf_size;
 	enum omapfb_update_mode update_mode;
-
-	readbuf = malloc(readbuf_size);
 
 	fd = open_fb("/dev/fb0");
 
 	FBCTL(FBIOGET_VSCREENINFO, &var);
 	FBCTL(FBIOGET_FSCREENINFO, &fix);
+	FBCTL(OMAPFB_GET_DISPLAY_INFO, &di);
+
+	readbuf_size = di.xres * di.yres * 3;
+	readbuf = malloc(readbuf_size);
 
 	void* ptr = mmap(0, var.yres_virtual * fix.line_length,
 			PROT_WRITE | PROT_READ,
@@ -251,13 +254,18 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-	srand((unsigned int)time(NULL) + getpid());
+	if (argc > 1) {
+		int seed = atoi(argv[1]);
+		srand(seed);
+	} else {
+		srand((unsigned int)time(NULL) + getpid());
+	}
 
 	FBCTL(OMAPFB_GET_UPDATE_MODE, &update_mode);
 	manual = update_mode == OMAPFB_MANUAL_UPDATE;
 
 	fill_screen(ptr);
-	fb_update_window(fd, 0, 0, 864, 480);
+	fb_update_window(fd, 0, 0, di.xres, di.yres);
 
 	for (i = 0; 1 || i < 10000; i++) {
 		unsigned color;
