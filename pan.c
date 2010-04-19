@@ -28,14 +28,6 @@ static unsigned ovl_yres;
 const unsigned frame_vxres = 1024;
 const unsigned frame_vyres = 1024;
 
-struct fb_info
-{
-	int fd;
-	struct fb_var_screeninfo var;
-	struct fb_fix_screeninfo fix;
-	unsigned bytespp;
-};
-
 struct frame_info
 {
 	void *addr;

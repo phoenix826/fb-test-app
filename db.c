@@ -24,14 +24,6 @@ static unsigned frame_yres;
 static unsigned ovl_xres;
 static unsigned ovl_yres;
 
-struct fb_info
-{
-	int fd;
-	struct fb_var_screeninfo var;
-	struct fb_fix_screeninfo fix;
-	unsigned bytespp;
-};
-
 struct frame_info
 {
 	void *addr;

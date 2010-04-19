@@ -98,7 +98,6 @@ void fill_screen(void *fbmem)
 	unsigned x, y;
 	unsigned h = var.yres_virtual;
 	unsigned w = var.xres_virtual;
-	int color;
 
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {

@@ -179,6 +179,7 @@ void fill_screen(void *fbmem)
 	}
 }
 
+#if 0
 static void checkrect(int fd, int x, int y, int w, int h,
 		void *buf, unsigned buf_size, unsigned color)
 {
@@ -225,6 +226,7 @@ static void checkrect(int fd, int x, int y, int w, int h,
 		exit(1);
 	}
 }
+#endif
 
 int main(int argc, char** argv)
 {
