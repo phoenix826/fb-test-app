@@ -109,6 +109,10 @@ static void fill_screen(struct fb_info *fb_info)
 		}
 
 	}
+
+	fb_put_string(fb_info, w / 3 * 2, 30, "RED", 3, 0xffffff, 1, 3);
+	fb_put_string(fb_info, w / 3, 30, "GREEN", 5, 0xffffff, 1, 5);
+	fb_put_string(fb_info, 20, 30, "BLUE", 4, 0xffffff, 1, 4);
 }
 
 int main(int argc, char** argv)

@@ -7,11 +7,11 @@ PROGS=db readback upd perf rect test offset pan ovl
 
 all: $(PROGS)
 
-.c.o: common.h
+.c.o: common.h font.h
 
-test: test.o common.o
-upd: upd.o common.o
-ovl: ovl.o common.o
+test: test.o common.o font_8x8.c
+upd: upd.o common.o font_8x8.c
+ovl: ovl.o common.o font_8x8.c
 
 clean:
 	rm -f $(PROGS) *.o
