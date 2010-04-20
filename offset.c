@@ -27,6 +27,7 @@
 		exit(1); }
 
 
+
 int main(int argc, char** argv)
 {
 	char str[64];
@@ -42,15 +43,14 @@ int main(int argc, char** argv)
 			req_fb = atoi(optarg);
 			break;
 		default:
-			printf("usage: -f <fbnum> -r <rot> -m <bitspp> "
-					"-y <yuv>\n");
+			printf("usage: %s [-f <fbnum>] <x> <y>\n", argv[0]);
 			exit(EXIT_FAILURE);
 		}
 	}
 
 	if (argc - optind != 2) {
-		printf("give x and y offsets\n");
-		return -1;
+		printf("usage: %s [-f <fbnum>] <x> <y>\n", argv[0]);
+		exit(EXIT_FAILURE);
 	}
 
 	sprintf(str, "/dev/fb%d", req_fb);

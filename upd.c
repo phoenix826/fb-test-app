@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <sys/ioctl.h>
 
@@ -21,8 +22,6 @@ int main(int argc, char** argv)
 
 	fd = fb_info.fd;
 	di = &fb_info.di;
-
-	FBCTL1(OMAPFB_GET_DISPLAY_INFO, &di);
 
 	if (argc != 5) {
 		x = 0;

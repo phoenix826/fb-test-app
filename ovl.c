@@ -57,7 +57,7 @@ static void draw_pixel(struct fb_info *fb_info, int x, int y, unsigned color)
 	}
 }
 
-void fill_screen(struct fb_info *fb_info)
+static void fill_screen(struct fb_info *fb_info)
 {
 	unsigned x, y;
 	unsigned h = fb_info->var.yres_virtual;
@@ -114,7 +114,6 @@ void fill_screen(struct fb_info *fb_info)
 int main(int argc, char** argv)
 {
 	int fb_num;
-	enum omapfb_update_mode update_mode;
 
 	if (argc == 2)
 		fb_num = atoi(argv[1]);
@@ -125,8 +124,7 @@ int main(int argc, char** argv)
 
 	fill_screen(&fb_info);
 
-	IOCTL1(fb_info.fd, OMAPFB_GET_UPDATE_MODE, &update_mode);
-	if (update_mode == OMAPFB_MANUAL_UPDATE) {
+	if (fb_info.update_mode == OMAPFB_MANUAL_UPDATE) {
 		fb_update_window(fb_info.fd, 0, 0,
 				fb_info.di.xres, fb_info.di.yres);
 		fb_sync_gfx(fb_info.fd);

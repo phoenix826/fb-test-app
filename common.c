@@ -27,9 +27,10 @@ void fb_open(int fb_num, struct fb_info *fb_info)
 	ASSERT(fd >= 0);
 
 	fb_info->fd = fd;
-	FBCTL1(OMAPFB_GET_DISPLAY_INFO, &fb_info->di);
-	FBCTL1(FBIOGET_VSCREENINFO, &fb_info->var);
-	FBCTL1(FBIOGET_FSCREENINFO, &fb_info->fix);
+	IOCTL1(fd, OMAPFB_GET_DISPLAY_INFO, &fb_info->di);
+	IOCTL1(fd, FBIOGET_VSCREENINFO, &fb_info->var);
+	IOCTL1(fd, FBIOGET_FSCREENINFO, &fb_info->fix);
+	IOCTL1(fd, OMAPFB_GET_UPDATE_MODE, &fb_info->update_mode);
 
 	printf("display %dx%d\n", fb_info->di.xres, fb_info->di.yres);
 	printf("fb res %dx%d virtual %dx%d, line_len %d\n",
