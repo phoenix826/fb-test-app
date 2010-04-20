@@ -34,6 +34,8 @@ struct fb_info
 	unsigned bytespp;
 };
 
+extern char fontdata_8x8[];
+
 void fb_open(int fb_num, struct fb_info *fb_info);
 void fb_update_window(int fd, short x, short y, short w, short h);
 void fb_sync_gfx(int fd);

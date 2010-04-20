@@ -15,7 +15,6 @@
 #include <linux/omapfb.h>
 
 #include "common.h"
-#include "font.h"
 
 void fb_open(int fb_num, struct fb_info *fb_info)
 {
@@ -88,30 +87,27 @@ static void fb_put_char(struct fb_info *fb_info, int x, int y, char c,
 		unsigned color)
 {
 	int i, j, bits, loc;
-	char *fbuffer = (char *)fb_info->ptr;
+	unsigned short *p16;
+	unsigned int *p32;
 	struct fb_var_screeninfo *var = &fb_info->var;
 	struct fb_fix_screeninfo *fix = &fb_info->fix;
 
-	for(i = 0; i < font_vga_8x8.height; i++) {
-		bits = font_vga_8x8.data[font_vga_8x8.height * c + i];
+	for(i = 0; i < 8; i++) {
+		bits = fontdata_8x8[8 * c + i];
 		for(j = 0; j < 8; j++) {
 			loc = (x + j + var->xoffset) * (var->bits_per_pixel / 8)
 				+ (y + i + var->yoffset) * fix->line_length;
-			if(loc >= 0 && loc < fix->smem_len && ((bits >> (7 - j)) & 1)) {
+			if(loc >= 0 && loc < fix->smem_len &&
+					((bits >> (7 - j)) & 1)) {
 				switch(var->bits_per_pixel) {
-					case 8:
-					default:
-						if(color==0)
-							fbuffer[loc] = 0;
-						else
-							fbuffer[loc] = 1;
-						break;
 					case 16:
-						*((unsigned short *)(fbuffer + loc)) = color;
+						p16 = fb_info->ptr + loc;
+						*p16 = color;
 						break;
 					case 24:
 					case 32:
-						*((unsigned int *)(fbuffer + loc)) = color;
+						p32 = fb_info->ptr + loc;
+						*p32 = color;
 						break;
 				}
 			}
@@ -126,13 +122,11 @@ int fb_put_string(struct fb_info *fb_info, int x, int y, char *s, int maxlen,
 	int w = 0;
 
 	if(clear)
-		fb_clear_area(fb_info, x, y, clearlen * font_vga_8x8.width,
-				font_vga_8x8.height);
+		fb_clear_area(fb_info, x, y, clearlen * 8, 8);
 
 	for(i=0;i<strlen(s) && i < maxlen;i++) {
-		fb_put_char(fb_info, (x + font_vga_8x8.width * i), y, s[i],
-				color);
-		w += font_vga_8x8.width;
+		fb_put_char(fb_info, (x + 8 * i), y, s[i], color);
+		w += 8;
 	}
 
 	return w;
