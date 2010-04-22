@@ -88,11 +88,12 @@ static void update_window(struct fb_info *fb_info,
 		unsigned width, unsigned height)
 {
 	struct omapfb_update_window upd;
+
 	upd.x = 0;
 	upd.y = 0;
 	upd.width = width;
 	upd.height = height;
-	ioctl(fb_info->fd, OMAPFB_UPDATE_WINDOW, &upd);
+	IOCTL1(fb_info->fd, OMAPFB_UPDATE_WINDOW, &upd);
 }
 
 static unsigned long min_pan_us, max_pan_us, sum_pan_us;
