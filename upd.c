@@ -36,6 +36,7 @@ int main(int argc, char** argv)
 	}
 
 	fb_update_window(fd, x, y, w, h);
+	fb_sync_gfx(fd);
 
 	close(fd);
 
