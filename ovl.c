@@ -119,7 +119,7 @@ void move_ovl(unsigned x, unsigned y, unsigned w, unsigned h,
 	struct fb_var_screeninfo *var = &fb_info.var;
 	struct omapfb_plane_info pi;
 
-	printf("%d,%d %dx%d (%d,%d)\n", x, y, w, h, ox, oy);
+	//printf("%d,%d %dx%d (%d,%d)\n", x, y, w, h, ox, oy);
 
 
 	IOCTL1(fd, OMAPFB_QUERY_PLANE, &pi);
@@ -134,6 +134,8 @@ void move_ovl(unsigned x, unsigned y, unsigned w, unsigned h,
 	IOCTL1(fd, FBIOPUT_VSCREENINFO, var);
 
 	IOCTL1(fd, OMAPFB_QUERY_PLANE, &pi);
+	pi.out_width = w*2/3;
+	pi.out_height = h*2/3;
 	pi.pos_x = x;
 	pi.pos_y = y;
 	pi.enabled = 1;
@@ -143,15 +145,36 @@ void move_ovl(unsigned x, unsigned y, unsigned w, unsigned h,
 
 int main(int argc, char** argv)
 {
-	int fb_num;
 	unsigned c;
 
-	if (argc == 2)
-		fb_num = atoi(argv[1]);
-	else
-		fb_num = 0;
+	int opt;
+	int req_fb = 0;
+	int req_bitspp = 32;
+	int req_yuv = 0;
+	int req_rot = 0;
 
-	fb_open(fb_num, &fb_info);
+	while ((opt = getopt(argc, argv, "f:r:m:y:")) != -1) {
+		switch (opt) {
+		case 'f':
+			req_fb = atoi(optarg);
+			break;
+		case 'r':
+			req_rot = atoi(optarg);
+			break;
+		case 'm':
+			req_bitspp = atoi(optarg);
+			break;
+		case 'y':
+			req_yuv = atoi(optarg);
+			break;
+		default:
+			printf("usage: -f <fbnum> -r <rot> -m <bitspp> "
+					"-y <yuv>\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	fb_open(req_fb, &fb_info);
 
 	fill_screen(&fb_info);
 
