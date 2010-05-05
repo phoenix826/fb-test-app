@@ -1,6 +1,10 @@
 
-CC=$(CROSS_COMPILE)gcc
-CFLAGS=-I/home/valkeine/work/linux/usr/include -O2 -Wall
+ifdef CROSS_COMPILE
+	CC=$(CROSS_COMPILE)gcc
+	CFLAGS=-I/home/valkeine/work/linux/usr/include -O2 -Wall
+else
+	CFLAGS=-O2 -Wall
+endif
 LDFLAGS=-lm
 
 PROGS=db readback upd perf rect test offset pan ovl
