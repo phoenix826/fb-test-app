@@ -182,8 +182,9 @@ int main(int argc, char **argv)
 	int req_bitspp = 32;
 	int req_yuv = 0;
 	int req_rot = 0;
+	int req_te = 1;
 
-	while ((opt = getopt(argc, argv, "f:r:m:y:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:r:m:y:t")) != -1) {
 		switch (opt) {
 		case 'f':
 			req_fb = atoi(optarg);
@@ -197,9 +198,12 @@ int main(int argc, char **argv)
 		case 'y':
 			req_yuv = atoi(optarg);
 			break;
+		case 't':
+			req_te = 0;
+			break;
 		default:
-			printf("usage: -f <fbnum> -r <rot> -m <bitspp> "
-					"-y <yuv>\n");
+			printf("usage: ./db [-f <fbnum>] [-r <rot>] [-m <bitspp>] "
+					"[-y <yuv>] [-t]\n");
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -300,10 +304,13 @@ int main(int argc, char **argv)
 	}
 
 	FBCTL1(OMAPFB_GET_CAPS, &caps);
-	if (caps.ctrl & OMAPFB_CAPS_TEARSYNC) {
+	if ((caps.ctrl & OMAPFB_CAPS_TEARSYNC)) {
 		struct omapfb_tearsync_info tear;
-		printf("Enabling TE\n");
-		tear.enabled = 1;
+		if (req_te)
+			printf("Enabling TE\n");
+		else
+			printf("Disabling TE\n");
+		tear.enabled = req_te;
 		FBCTL1(OMAPFB_SET_TEARSYNC, &tear);
 	}
 
