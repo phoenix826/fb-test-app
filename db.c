@@ -178,13 +178,14 @@ int main(int argc, char **argv)
 	struct frame_info frame1, frame2;
 
 	int opt;
+	int req_nfrm = 10000;
 	int req_fb = 0;
 	int req_bitspp = 32;
 	int req_yuv = 0;
 	int req_rot = 0;
 	int req_te = 1;
 
-	while ((opt = getopt(argc, argv, "f:r:m:y:t")) != -1) {
+	while ((opt = getopt(argc, argv, "f:r:m:y:n:t")) != -1) {
 		switch (opt) {
 		case 'f':
 			req_fb = atoi(optarg);
@@ -201,9 +202,12 @@ int main(int argc, char **argv)
 		case 't':
 			req_te = 0;
 			break;
+		case 'n':
+			req_nfrm = atoi(optarg);
+			break;
 		default:
 			printf("usage: ./db [-f <fbnum>] [-r <rot>] [-m <bitspp>] "
-					"[-y <yuv>] [-t]\n");
+					"[-y <yuv>] [-n <num_of_frames>] [-t]\n");
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -335,6 +339,8 @@ int main(int argc, char **argv)
 		}
 
 		frame++;
+		if (frame >= req_nfrm)
+			break;
 
 		perf_pan_start();
 
