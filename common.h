@@ -36,7 +36,7 @@ struct fb_info
 
 extern char fontdata_8x8[];
 
-void fb_open(int fb_num, struct fb_info *fb_info);
+void fb_open(int fb_num, struct fb_info *fb_info, int reset);
 void fb_update_window(int fd, short x, short y, short w, short h);
 void fb_sync_gfx(int fd);
 int fb_put_string(struct fb_info *fb_info, int x, int y, char *s, int maxlen,

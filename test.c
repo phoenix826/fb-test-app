@@ -115,16 +115,27 @@ static void fill_screen(struct fb_info *fb_info)
 	fb_put_string(fb_info, 20, 30, "BLUE", 4, 0xffffff, 1, 4);
 }
 
+
 int main(int argc, char** argv)
 {
-	int fb_num;
+	int opt;
+	int req_fb = 0;
+	int req_reset = 0;
 
-	if (argc == 2)
-		fb_num = atoi(argv[1]);
-	else
-		fb_num = 0;
+	while ((opt = getopt(argc, argv, "f:r")) != -1) {
+		switch (opt) {
+		case 'f':
+			req_fb = atoi(optarg);
+			break;
+		case 'r':
+			req_reset = 1;
+			break;
+		default:
+			exit(EXIT_FAILURE);
+		}
+	}
 
-	fb_open(fb_num, &fb_info);
+	fb_open(req_fb, &fb_info, req_reset);
 
 	fill_screen(&fb_info);
 

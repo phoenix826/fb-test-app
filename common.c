@@ -16,7 +16,7 @@
 
 #include "common.h"
 
-void fb_open(int fb_num, struct fb_info *fb_info)
+void fb_open(int fb_num, struct fb_info *fb_info, int reset)
 {
 	char str[64];
 	int fd;
@@ -31,6 +31,33 @@ void fb_open(int fb_num, struct fb_info *fb_info)
 	IOCTL1(fd, FBIOGET_VSCREENINFO, &fb_info->var);
 	IOCTL1(fd, FBIOGET_FSCREENINFO, &fb_info->fix);
 	IOCTL1(fd, OMAPFB_GET_UPDATE_MODE, &fb_info->update_mode);
+
+	if (reset) {
+		struct omapfb_mem_info mi;
+		struct omapfb_plane_info pi;
+
+		IOCTL1(fd, OMAPFB_QUERY_PLANE, &pi);
+		pi.enabled = 0;
+		IOCTL1(fd, OMAPFB_SETUP_PLANE, &pi);
+
+		FBCTL1(OMAPFB_QUERY_MEM, &mi);
+		mi.size = fb_info->di.xres * fb_info->di.yres *
+			fb_info->var.bits_per_pixel / 8;
+		FBCTL1(OMAPFB_SETUP_MEM, &mi);
+
+		fb_info->var.xres_virtual = fb_info->var.xres = fb_info->di.xres;
+		fb_info->var.yres_virtual = fb_info->var.yres = fb_info->di.yres;
+		FBCTL1(FBIOPUT_VSCREENINFO, &fb_info->var);
+
+		pi.out_width = fb_info->var.xres;
+		pi.out_height = fb_info->var.yres;
+		pi.enabled = 1;
+		FBCTL1(OMAPFB_SETUP_PLANE, &pi);
+
+		IOCTL1(fd, FBIOGET_VSCREENINFO, &fb_info->var);
+		IOCTL1(fd, FBIOGET_FSCREENINFO, &fb_info->fix);
+		IOCTL1(fd, OMAPFB_GET_UPDATE_MODE, &fb_info->update_mode);
+	}
 
 	printf("display %dx%d\n", fb_info->di.xres, fb_info->di.yres);
 	printf("fb res %dx%d virtual %dx%d, line_len %d\n",
