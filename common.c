@@ -49,6 +49,8 @@ void fb_open(int fb_num, struct fb_info *fb_info, int reset)
 		fb_info->var.yres_virtual = fb_info->var.yres = fb_info->di.yres;
 		FBCTL1(FBIOPUT_VSCREENINFO, &fb_info->var);
 
+		pi.pos_x = 0;
+		pi.pos_y = 0;
 		pi.out_width = fb_info->var.xres;
 		pi.out_height = fb_info->var.yres;
 		pi.enabled = 1;
