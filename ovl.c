@@ -134,8 +134,8 @@ void move_ovl(unsigned x, unsigned y, unsigned w, unsigned h,
 	IOCTL1(fd, FBIOPUT_VSCREENINFO, var);
 
 	IOCTL1(fd, OMAPFB_QUERY_PLANE, &pi);
-	pi.out_width = w*2/3;
-	pi.out_height = h*2/3;
+	pi.out_width = w; //*2/3;
+	pi.out_height = h; //*2/3;
 	pi.pos_x = x;
 	pi.pos_y = y;
 	pi.enabled = 1;
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	fb_open(req_fb, &fb_info);
+	fb_open(req_fb, &fb_info, 0);
 
 	fill_screen(&fb_info);
 

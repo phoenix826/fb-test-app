@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 	int x, y, w, h;
 	struct omapfb_display_info *di;
 
-	fb_open(0, &fb_info);
+	fb_open(0, &fb_info, 0);
 
 	fd = fb_info.fd;
 	di = &fb_info.di;
