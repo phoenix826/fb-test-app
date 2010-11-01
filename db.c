@@ -71,15 +71,43 @@ static void mess_frame(struct frame_info *frame)
 static void draw_bar(struct frame_info *frame, int xpos, int width)
 {
 	int x, y;
+	unsigned short c16;
+	unsigned int c32;
+
+	unsigned int colors32[] = {
+		0xffffff,
+		0xff0000,
+		0xffffff,
+		0x00ff00,
+		0xffffff,
+		0x0000ff,
+		0xffffff,
+		0xaaaaaa,
+		0xffffff,
+		0x777777,
+		0xffffff,
+		0x333333,
+		0xffffff,
+	};
+
+	unsigned short colors16[] = {
+		0xffff,
+		0x001f,
+		0xffff,
+	};
 
 	for (y = 0; y < frame->yres; ++y) {
 		unsigned int *lp32 = frame->addr + y * frame->line_len;
 		unsigned short *lp16 = frame->addr + y * frame->line_len;
+
+		c16 = colors16[y / (frame->yres / (sizeof(colors16) / 2))];
+		c32 = colors32[y / (frame->yres / (sizeof(colors32) / 4))];
+
 		for (x = xpos; x < xpos+width; ++x) {
 			if (frame->fb_info->bytespp == 2)
-				lp16[x] = 0xffff;
+				lp16[x] = c16;
 			else
-				lp32[x] = 0xffffffff;
+				lp32[x] = c32;
 		}
 	}
 }
@@ -372,7 +400,7 @@ int main(int argc, char **argv)
 
 		if (1) {
 			const int bar_width = 40;
-			const int speed = 10;
+			const int speed = 8;
 			int bar_xpos = (frame * speed) %
 				(var->xres - bar_width);
 
