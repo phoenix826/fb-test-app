@@ -27,7 +27,6 @@
 
 static struct fb_var_screeninfo var;
 static struct fb_fix_screeninfo fix;
-static int manual;
 
 int open_fb(const char* dev)
 {
