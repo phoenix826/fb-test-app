@@ -6,7 +6,7 @@ else
 	CFLAGS=-O2 -Wall
 endif
 
-PROGS=perf rect fb-test offset pan ovl
+PROGS=perf rect fb-test offset ovl
 
 all: $(PROGS)
 
