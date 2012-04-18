@@ -170,13 +170,24 @@ static void do_fill_screen(struct fb_info *fb_info,int pattern)
 	}
 }
 
+void show_help(void)
+{
+	printf("Usage: fb-test -f fbnum -r -g -b -w -p pattern \n");
+	printf("Where -f fbnum   = framebuffer device number\n");
+	printf("      -r         = fill framebuffer with red\n");
+	printf("      -g         = fill framebuffer with green\n");
+	printf("      -b         = fill framebuffer with blue\n");
+	printf("      -w         = fill framebuffer with white\n");
+	printf("      -p pattern = fill framebuffer with specific pattern number\n");
+}
+
 int main(int argc, char** argv)
 {
 	int opt;
 	int req_fb = 0;
 	int req_pattern = 0;
 
-	while ((opt = getopt(argc, argv, "f:rgbwp:")) != -1) {
+	while ((opt = getopt(argc, argv, "hrgbwp:f:")) != -1) {
 		switch (opt) {
 		case 'f':
 			req_fb = atoi(optarg);
@@ -196,6 +207,9 @@ int main(int argc, char** argv)
 		case 'w':
 			req_pattern=4;
 			break;
+		case 'h':
+			show_help();
+			return 0;
 		default:
 			exit(EXIT_FAILURE);
 		}
