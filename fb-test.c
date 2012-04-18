@@ -133,17 +133,68 @@ static void fill_screen(struct fb_info *fb_info)
 	fb_put_string(fb_info, 20, 30, "BLUE", 4, 0xffffff, 1, 4);
 }
 
+void fill_screen_solid(struct fb_info *fb_info,unsigned int color)
+{
+
+	unsigned x, y;
+	unsigned h = fb_info->var.yres_virtual;
+	unsigned w = fb_info->var.xres_virtual;
+
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++) {
+			draw_pixel(fb_info, x, y, color);
+		}
+	}
+}
+
+static void do_fill_screen(struct fb_info *fb_info,int pattern)
+{
+
+	switch (pattern){
+	case 1:
+		fill_screen_solid(fb_info,0xff0000);
+		break;
+	case 2:
+		fill_screen_solid(fb_info,0x00ff00);
+		break;
+	case 3:
+		fill_screen_solid(fb_info,0x0000ff);
+		break;
+	case 4:
+		fill_screen_solid(fb_info,0xffffff);
+		break;
+	case 0:
+	default:
+		fill_screen(fb_info);
+		break;
+	}
+}
 
 int main(int argc, char** argv)
 {
 	int opt;
 	int req_fb = 0;
-	int req_reset = 0;
+	int req_pattern = 0;
 
-	while ((opt = getopt(argc, argv, "f:r")) != -1) {
+	while ((opt = getopt(argc, argv, "f:rgbwp:")) != -1) {
 		switch (opt) {
 		case 'f':
 			req_fb = atoi(optarg);
+			break;
+		case 'p':
+			req_pattern = atoi(optarg);
+			break;
+		case 'r':
+			req_pattern=1;
+			break;
+		case 'g':
+			req_pattern=2;
+			break;
+		case 'b':
+			req_pattern=3;
+			break;
+		case 'w':
+			req_pattern=4;
 			break;
 		default:
 			exit(EXIT_FAILURE);
@@ -152,7 +203,7 @@ int main(int argc, char** argv)
 
 	fb_open(req_fb, &fb_info);
 
-	fill_screen(&fb_info);
+	do_fill_screen(&fb_info,req_pattern);
 
 	return 0;
 }
