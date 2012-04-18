@@ -12,7 +12,6 @@
 #include <sys/mman.h>
 
 #include <linux/fb.h>
-#include <linux/omapfb.h>
 
 #define ERROR(x) printf("fbtest error in line %s:%d: %s\n", __FUNCTION__, __LINE__, strerror(errno));
 
