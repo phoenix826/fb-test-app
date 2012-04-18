@@ -1,10 +1,7 @@
 *.o
-db
-readback
-upd
 perf
 rect
-test
+fb-test
 offset
 pan
 ovl
