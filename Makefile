@@ -6,7 +6,7 @@ else
 	CFLAGS=-O2 -Wall
 endif
 
-PROGS=readback upd perf rect fb-test offset pan ovl
+PROGS=upd perf rect fb-test offset pan ovl
 
 all: $(PROGS)
 
