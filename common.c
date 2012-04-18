@@ -34,7 +34,7 @@
 
 #include "common.h"
 
-void fb_open(int fb_num, struct fb_info *fb_info, int reset)
+void fb_open(int fb_num, struct fb_info *fb_info)
 {
 	char str[64];
 	int fd;

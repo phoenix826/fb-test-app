@@ -145,15 +145,12 @@ int main(int argc, char** argv)
 		case 'f':
 			req_fb = atoi(optarg);
 			break;
-		case 'r':
-			req_reset = 1;
-			break;
 		default:
 			exit(EXIT_FAILURE);
 		}
 	}
 
-	fb_open(req_fb, &fb_info, req_reset);
+	fb_open(req_fb, &fb_info);
 
 	fill_screen(&fb_info);
 
