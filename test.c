@@ -31,7 +31,6 @@
 #include <sys/mman.h>
 
 #include <linux/fb.h>
-#include <linux/omapfb.h>
 
 #include "common.h"
 
@@ -157,12 +156,6 @@ int main(int argc, char** argv)
 	fb_open(req_fb, &fb_info, req_reset);
 
 	fill_screen(&fb_info);
-
-	if (fb_info.update_mode == OMAPFB_MANUAL_UPDATE) {
-		fb_update_window(fb_info.fd, 0, 0,
-				fb_info.di.xres, fb_info.di.yres);
-		fb_sync_gfx(fb_info.fd);
-	}
 
 	return 0;
 }

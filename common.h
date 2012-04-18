@@ -22,7 +22,6 @@
 
 #include <stdio.h>
 #include <linux/fb.h>
-#include <linux/omapfb.h>
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -44,9 +43,6 @@ struct fb_info
 	int fd;
 
 	void *ptr;
-
-	struct omapfb_display_info di;
-	enum omapfb_update_mode update_mode;
 
 	struct fb_var_screeninfo var;
 	struct fb_fix_screeninfo fix;
