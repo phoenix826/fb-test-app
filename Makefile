@@ -12,7 +12,7 @@ all: $(PROGS)
 
 .c.o: common.h font.h
 
-test: test.o common.o font_8x8.c
+fb-test: test.o common.o font_8x8.c
 ovl: ovl.o common.o font_8x8.c
 
 clean:
