@@ -12,9 +12,6 @@
 #include <sys/mman.h>
 
 #include <linux/fb.h>
-#include <linux/omapfb.h>
-
-//#define READBACK
 
 #define ERROR(x) printf("fbtest error in line %s:%d: %s\n", __FUNCTION__, __LINE__, strerror(errno));
 
@@ -43,25 +40,6 @@ int open_fb(const char* dev)
 	}
 
 	return fd;
-}
-
-static int fb_update_window(int fd, short x, short y, short w, short h)
-{
-	struct omapfb_update_window uw;
-
-	if (!manual)
-		return 0;
-
-	uw.x = x;
-	uw.y = y;
-	uw.width = w;
-	uw.height = h;
-
-	//printf("update %d,%d,%d,%d\n", x, y, w, h);
-	FBCTL(OMAPFB_UPDATE_WINDOW, &uw);
-	FBCTL0(OMAPFB_SYNC_GFX);
-
-	return 0;
 }
 
 struct rect {
@@ -179,72 +157,20 @@ void fill_screen(void *fbmem)
 	}
 }
 
-#if 0
-static void checkrect(int fd, int x, int y, int w, int h,
-		void *buf, unsigned buf_size, unsigned color)
-{
-	struct omapfb_memory_read mr;
-	int len;
-	int i;
-	unsigned char *b8 = buf;
-
-	mr.buffer = buf;
-	mr.buffer_size = buf_size;
-	mr.x = x;
-	mr.y = y;
-	mr.w = w;
-	mr.h = h;
-
-	len = ioctl(fd, OMAPFB_MEMORY_READ, &mr);
-
-	//fprintf(stderr, "read returned %d bytes, asked %d\n", len, w * h * 3);
-
-	if (len == 0) {
-		printf("FAIL\n");
-		exit(1);
-	}
-
-	for (i = 0; i < w * h * 3; i += 3) {
-		unsigned r = b8[i + 0];
-		unsigned g = b8[i + 1];
-		unsigned b = b8[i + 2];
-		unsigned c = (r << 16) | (g << 8) | b;
-		unsigned x = (i / 3) % w;
-		unsigned y = (i / 3) / w;
-		unsigned expect;
-
-		if (x == y)
-			expect = ~color & 0xffffff;
-		else
-			expect = color;
-
-		if (expect == c)
-			continue;
-
-		printf("fail at %d, %d\n", x, y);
-		printf("read %08x, expected %08x\n", c, expect);
-		exit(1);
-	}
-}
-#endif
-
 int main(int argc, char** argv)
 {
 	int fd;
 	struct rect r;
 	int i;
 	void *readbuf;
-	struct omapfb_display_info di;
 	unsigned readbuf_size;
-	enum omapfb_update_mode update_mode;
 
 	fd = open_fb("/dev/fb0");
 
 	FBCTL(FBIOGET_VSCREENINFO, &var);
 	FBCTL(FBIOGET_FSCREENINFO, &fix);
-	FBCTL(OMAPFB_GET_DISPLAY_INFO, &di);
 
-	readbuf_size = di.xres * di.yres * 3;
+	readbuf_size = var.xres_virtual * var.yres_virtual * 3;
 	readbuf = malloc(readbuf_size);
 
 	void* ptr = mmap(0, var.yres_virtual * fix.line_length,
@@ -263,11 +189,7 @@ int main(int argc, char** argv)
 		srand((unsigned int)time(NULL) + getpid());
 	}
 
-	FBCTL(OMAPFB_GET_UPDATE_MODE, &update_mode);
-	manual = update_mode == OMAPFB_MANUAL_UPDATE;
-
 	fill_screen(ptr);
-	fb_update_window(fd, 0, 0, di.xres, di.yres);
 
 	for (i = 0; 1 || i < 10000; i++) {
 		unsigned color;
@@ -278,12 +200,6 @@ int main(int argc, char** argv)
 				var.xres_virtual, var.yres_virtual);
 
 		color = fill_rect(ptr, &r);
-
-		fb_update_window(fd, r.x, r.y, r.w, r.h);
-
-#ifdef READBACK
-		checkrect(fd, r.x, r.y, r.w, r.h, readbuf, readbuf_size, color);
-#endif
 	}
 
 	return 0;
