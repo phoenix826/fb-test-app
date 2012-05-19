@@ -372,6 +372,9 @@ int main(int argc, char **argv)
 	int fb_num = 0;
 	char str[64];
 
+	printf("perf %d.%d.%d (%s)\n", VERSION, PATCHLEVEL, SUBLEVEL,
+		VERSION_NAME);
+
 	if (argc != 3) {
 		printf("usage: %s <fbnum> <logfile>\n", argv[0]);
 		return 0;

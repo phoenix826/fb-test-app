@@ -187,6 +187,9 @@ int main(int argc, char** argv)
 	int req_fb = 0;
 	int req_pattern = 0;
 
+	printf("fb-test %d.%d.%d (%s)\n", VERSION, PATCHLEVEL, SUBLEVEL,
+		VERSION_NAME);
+
 	while ((opt = getopt(argc, argv, "hrgbwp:f:")) != -1) {
 		switch (opt) {
 		case 'f':

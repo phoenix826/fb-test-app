@@ -1,3 +1,8 @@
+VERSION = 1
+PATCHLEVEL = 0
+SUBLEVEL = 0
+EXTRAVERSION = .git
+NAME = tablet_rosa
 
 ifdef CROSS_COMPILE
 	CC=$(CROSS_COMPILE)gcc
@@ -5,6 +10,11 @@ ifdef CROSS_COMPILE
 else
 	CFLAGS=-O2 -Wall
 endif
+
+CFLAGS += -DVERSION=$(VERSION)
+CFLAGS += -DPATCHLEVEL=$(PATCHLEVEL)
+CFLAGS += -DSUBLEVEL=$(SUBLEVEL)
+CFLAGS += -DVERSION_NAME=\"$(NAME)\"
 
 PROGS=perf rect fb-test offset
 

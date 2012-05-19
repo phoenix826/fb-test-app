@@ -183,6 +183,9 @@ int main(int argc, char** argv)
 	void *readbuf;
 	unsigned readbuf_size;
 
+	printf("rect %d.%d.%d (%s)\n", VERSION, PATCHLEVEL, SUBLEVEL,
+		VERSION_NAME);
+
 	fd = open_fb("/dev/fb0");
 
 	FBCTL(FBIOGET_VSCREENINFO, &var);

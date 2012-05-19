@@ -55,6 +55,9 @@ int main(int argc, char** argv)
 	int opt;
 	int req_fb = 0;
 
+	printf("offset %d.%d.%d (%s)\n", VERSION, PATCHLEVEL, SUBLEVEL,
+		VERSION_NAME);
+
 	while ((opt = getopt(argc, argv, "f:")) != -1) {
 		switch (opt) {
 		case 'f':
