@@ -37,7 +37,7 @@ static struct fb_fix_screeninfo fix;
 static unsigned bytespp;
 FILE *logfile;
 
-int timeval_subtract (struct timeval *result, struct timeval *x,
+int timeval_subtract(struct timeval *result, struct timeval *x,
 		struct timeval *y)
 {
 	/* Perform the carry for the later subtraction by updating y. */
@@ -99,7 +99,7 @@ static void run(const char *name, test_func func)
 	fflush(logfile);
 	sync();
 
-	// calibrate
+	/* calibrate */
 	func(calib_loops, &usecs, &pixels);
 	loops = runtime_secs * 1000 * 1000 * calib_loops / usecs;
 
@@ -128,8 +128,7 @@ static void sequential_horiz_singlepixel_read(unsigned loops,
 
 	start_timing();
 
-	while (l--)
-	{
+	while (l--) {
 		__u32 *p32 = fb;
 		for (y = 0; y < var.yres_virtual; ++y) {
 			for (x = 0; x < var.xres_virtual; ++x)
@@ -159,8 +158,7 @@ static void sequential_horiz_singlepixel_write(unsigned loops,
 
 	start_timing();
 
-	while (l--)
-	{
+	while (l--) {
 		__u32 *p32 = fb;
 		for (y = 0; y < var.yres_virtual; ++y) {
 			for (x = 0; x < var.xres_virtual; ++x)
@@ -185,8 +183,7 @@ static void sequential_vert_singlepixel_read(unsigned loops,
 
 	start_timing();
 
-	while (l--)
-	{
+	while (l--) {
 		for (x = 0; x < var.xres_virtual; ++x) {
 			__u32 *p32 = ((__u32 *)fb) + x;
 			for (y = 0; y < var.yres_virtual; ++y) {
@@ -217,8 +214,7 @@ static void sequential_vert_singlepixel_write(unsigned loops,
 
 	start_timing();
 
-	while (l--)
-	{
+	while (l--) {
 		for (x = 0; x < var.xres_virtual; ++x) {
 			__u32 *p32 = ((__u32 *)fb) + x;
 			for (y = 0; y < var.yres_virtual; ++y) {
@@ -246,8 +242,7 @@ static void sequential_line_read(unsigned loops,
 
 	start_timing();
 
-	while (l--)
-	{
+	while (l--) {
 		void *p = fb;
 		for (y = 0; y < var.yres_virtual; ++y) {
 			memcpy(linebuf, p, var.xres_virtual * bytespp);
@@ -273,12 +268,11 @@ static void sequential_line_write(unsigned loops,
 
 	linebuf = malloc(var.xres_virtual * bytespp);
 	for (y = 0; y < var.xres_virtual * bytespp; ++y)
-		((unsigned char*)linebuf)[y] = y;
+		((unsigned char)*linebuf)[y] = y;
 
 	start_timing();
 
-	while (l--)
-	{
+	while (l--) {
 		void *p = fb;
 		for (y = 0; y < var.yres_virtual; ++y) {
 			memcpy(p, linebuf, var.xres_virtual * bytespp);
@@ -303,8 +297,7 @@ static void nonsequential_singlepixel_write(unsigned loops,
 
 	start_timing();
 
-	while (l--)
-	{
+	while (l--) {
 		for (i = 0; i < yres * xres; ++i) {
 			const unsigned yparts = 4;
 			const unsigned xparts = 4;
@@ -338,8 +331,7 @@ static void nonsequential_singlepixel_read(unsigned loops,
 
 	start_timing();
 
-	while (l--)
-	{
+	while (l--) {
 		for (i = 0; i < yres * xres; ++i) {
 			const unsigned yparts = 16;
 			const unsigned xparts = 8;
