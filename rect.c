@@ -36,14 +36,14 @@
 	__LINE__, strerror(errno));
 
 #define FBCTL(cmd, arg)				\
-	(if (ioctl(fd, cmd, arg) == -1) {	\
+	if (ioctl(fd, cmd, arg) == -1) {	\
 		ERROR("ioctl failed");		\
-		exit(1); })
+		exit(1); }
 
 #define FBCTL0(cmd)				\
-	(if (ioctl(fd, cmd) == -1) {		\
+	if (ioctl(fd, cmd) == -1) {		\
 		ERROR("ioctl failed");		\
-		exit(1); })
+		exit(1); }
 
 static struct fb_var_screeninfo var;
 static struct fb_fix_screeninfo fix;

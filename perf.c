@@ -268,7 +268,7 @@ static void sequential_line_write(unsigned loops,
 
 	linebuf = malloc(var.xres_virtual * bytespp);
 	for (y = 0; y < var.xres_virtual * bytespp; ++y)
-		((unsigned char)*linebuf)[y] = y;
+		((unsigned char*)linebuf)[y] = y;
 
 	start_timing();
 
