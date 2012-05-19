@@ -54,7 +54,7 @@ void fb_open(int fb_num, struct fb_info *fb_info)
 			fb_info->fix.line_length);
 	printf("dim %dmm x %dmm\n", fb_info->var.width, fb_info->var.height);
 
-	void* ptr = mmap(0,
+	void *ptr = mmap(0,
 			fb_info->var.yres_virtual * fb_info->fix.line_length,
 			PROT_WRITE | PROT_READ,
 			MAP_SHARED, fd, 0);
@@ -72,8 +72,7 @@ static void fb_clear_area(struct fb_info *fb_info, int x, int y, int w, int h)
 	struct fb_var_screeninfo *var = &fb_info->var;
 	struct fb_fix_screeninfo *fix = &fb_info->fix;
 
-	for(i = 0; i < h; i++)
-	{
+	for (i = 0; i < h; i++) {
 		loc = (x + var->xoffset) * (var->bits_per_pixel / 8)
 			+ (y + i + var->yoffset) * fix->line_length;
 		memset(fbuffer + loc, 0, w * var->bits_per_pixel / 8);
@@ -89,23 +88,23 @@ static void fb_put_char(struct fb_info *fb_info, int x, int y, char c,
 	struct fb_var_screeninfo *var = &fb_info->var;
 	struct fb_fix_screeninfo *fix = &fb_info->fix;
 
-	for(i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i++) {
 		bits = fontdata_8x8[8 * c + i];
-		for(j = 0; j < 8; j++) {
+		for (j = 0; j < 8; j++) {
 			loc = (x + j + var->xoffset) * (var->bits_per_pixel / 8)
 				+ (y + i + var->yoffset) * fix->line_length;
-			if(loc >= 0 && loc < fix->smem_len &&
+			if (loc >= 0 && loc < fix->smem_len &&
 					((bits >> (7 - j)) & 1)) {
-				switch(var->bits_per_pixel) {
-					case 16:
-						p16 = fb_info->ptr + loc;
-						*p16 = color;
-						break;
-					case 24:
-					case 32:
-						p32 = fb_info->ptr + loc;
-						*p32 = color;
-						break;
+				switch (var->bits_per_pixel) {
+				case 16:
+					p16 = fb_info->ptr + loc;
+					*p16 = color;
+					break;
+				case 24:
+				case 32:
+					p32 = fb_info->ptr + loc;
+					*p32 = color;
+					break;
 				}
 			}
 		}
@@ -118,10 +117,10 @@ int fb_put_string(struct fb_info *fb_info, int x, int y, char *s, int maxlen,
 	int i;
 	int w = 0;
 
-	if(clear)
+	if (clear)
 		fb_clear_area(fb_info, x, y, clearlen * 8, 8);
 
-	for(i=0;i<strlen(s) && i < maxlen;i++) {
+	for (i = 0; i < strlen(s) && i < maxlen; i++) {
 		fb_put_char(fb_info, (x + 8 * i), y, s[i], color);
 		w += 8;
 	}
