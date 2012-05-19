@@ -133,7 +133,7 @@ static void fill_screen(struct fb_info *fb_info)
 	fb_put_string(fb_info, 20, 30, "BLUE", 4, 0xffffff, 1, 4);
 }
 
-void fill_screen_solid(struct fb_info *fb_info,unsigned int color)
+void fill_screen_solid(struct fb_info *fb_info, unsigned int color)
 {
 
 	unsigned x, y;
@@ -141,27 +141,26 @@ void fill_screen_solid(struct fb_info *fb_info,unsigned int color)
 	unsigned w = fb_info->var.xres_virtual;
 
 	for (y = 0; y < h; y++) {
-		for (x = 0; x < w; x++) {
+		for (x = 0; x < w; x++)
 			draw_pixel(fb_info, x, y, color);
-		}
 	}
 }
 
-static void do_fill_screen(struct fb_info *fb_info,int pattern)
+static void do_fill_screen(struct fb_info *fb_info, int pattern)
 {
 
-	switch (pattern){
+	switch (pattern) {
 	case 1:
-		fill_screen_solid(fb_info,0xff0000);
+		fill_screen_solid(fb_info, 0xff0000);
 		break;
 	case 2:
-		fill_screen_solid(fb_info,0x00ff00);
+		fill_screen_solid(fb_info, 0x00ff00);
 		break;
 	case 3:
-		fill_screen_solid(fb_info,0x0000ff);
+		fill_screen_solid(fb_info, 0x0000ff);
 		break;
 	case 4:
-		fill_screen_solid(fb_info,0xffffff);
+		fill_screen_solid(fb_info, 0xffffff);
 		break;
 	case 0:
 	default:
@@ -172,16 +171,16 @@ static void do_fill_screen(struct fb_info *fb_info,int pattern)
 
 void show_help(void)
 {
-	printf("Usage: fb-test -f fbnum -r -g -b -w -p pattern \n");
+	printf("Usage: fb-test -f fbnum -r -g -b -w -p pattern\n");
 	printf("Where -f fbnum   = framebuffer device number\n");
 	printf("      -r         = fill framebuffer with red\n");
 	printf("      -g         = fill framebuffer with green\n");
 	printf("      -b         = fill framebuffer with blue\n");
 	printf("      -w         = fill framebuffer with white\n");
-	printf("      -p pattern = fill framebuffer with specific pattern number\n");
+	printf("      -p pattern = fill framebuffer with pattern number\n");
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 	int opt;
 	int req_fb = 0;
@@ -199,16 +198,16 @@ int main(int argc, char** argv)
 			req_pattern = atoi(optarg);
 			break;
 		case 'r':
-			req_pattern=1;
+			req_pattern = 1;
 			break;
 		case 'g':
-			req_pattern=2;
+			req_pattern = 2;
 			break;
 		case 'b':
-			req_pattern=3;
+			req_pattern = 3;
 			break;
 		case 'w':
-			req_pattern=4;
+			req_pattern = 4;
 			break;
 		case 'h':
 			show_help();
@@ -220,7 +219,7 @@ int main(int argc, char** argv)
 
 	fb_open(req_fb, &fb_info);
 
-	do_fill_screen(&fb_info,req_pattern);
+	do_fill_screen(&fb_info, req_pattern);
 
 	return 0;
 }
