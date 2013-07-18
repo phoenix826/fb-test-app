@@ -83,6 +83,7 @@ static void fb_put_char(struct fb_info *fb_info, int x, int y, char c,
 		unsigned color)
 {
 	int i, j, bits, loc;
+	unsigned char *p8;
 	unsigned short *p16;
 	unsigned int *p32;
 	struct fb_var_screeninfo *var = &fb_info->var;
@@ -96,6 +97,9 @@ static void fb_put_char(struct fb_info *fb_info, int x, int y, char c,
 			if (loc >= 0 && loc < fix->smem_len &&
 					((bits >> (7 - j)) & 1)) {
 				switch (var->bits_per_pixel) {
+				case 8:
+					p8 =  fb_info->ptr + loc;
+					*p8 = color;
 				case 16:
 					p16 = fb_info->ptr + loc;
 					*p16 = color;

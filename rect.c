@@ -100,7 +100,17 @@ static struct rect *get_rand_rect(struct rect *r,
 
 static void draw_pixel(void *fbmem, int x, int y, unsigned int color)
 {
-	if (var.bits_per_pixel == 16) {
+      if (var.bits_per_pixel == 8) {
+		unsigned char *p;
+
+		fbmem += fix.line_length * y;
+
+		p = fbmem;
+
+		p += x;
+
+		*p = color;
+	} else if (var.bits_per_pixel == 16) {
 		unsigned short c;
 		int r = (color >> 16) & 0xff;
 		int g = (color >> 8) & 0xff;

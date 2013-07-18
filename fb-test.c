@@ -41,8 +41,17 @@ static void draw_pixel(struct fb_info *fb_info, int x, int y, unsigned color)
 	void *fbmem;
 
 	fbmem = fb_info->ptr;
+	if (fb_info->var.bits_per_pixel == 8) {
+		unsigned char *p;
 
-	if (fb_info->var.bits_per_pixel == 16) {
+		fbmem += fb_info->fix.line_length * y;
+
+		p = fbmem;
+
+		p += x;
+
+		*p = color;
+	} else if (fb_info->var.bits_per_pixel == 16) {
 		unsigned short c;
 		unsigned r = (color >> 16) & 0xff;
 		unsigned g = (color >> 8) & 0xff;
