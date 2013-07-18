@@ -1,8 +1,8 @@
 /*
- * test.c
+ * gb-string.c
  *
- * Author: Tomi Valkeinen <tomi.valkeinen@nokia.com>
- * Copyright (C) 2009-2012 Tomi Valkeinen
+ * Author: aguirre.nicolas@gmail.com
+ * Copyright (C) 2013 Nicolas Aguirre
 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
@@ -155,80 +155,38 @@ void fill_screen_solid(struct fb_info *fb_info, unsigned int color)
 	}
 }
 
-static void do_fill_screen(struct fb_info *fb_info, int pattern)
-{
-
-	switch (pattern) {
-	case 1:
-		fill_screen_solid(fb_info, 0xff0000);
-		break;
-	case 2:
-		fill_screen_solid(fb_info, 0x00ff00);
-		break;
-	case 3:
-		fill_screen_solid(fb_info, 0x0000ff);
-		break;
-	case 4:
-		fill_screen_solid(fb_info, 0xffffff);
-		break;
-	case 0:
-	default:
-		fill_screen(fb_info);
-		break;
-	}
-}
-
 void show_help(void)
 {
-	printf("Usage: fb-test -f fbnum -r -g -b -w -p pattern\n");
-	printf("Where -f fbnum   = framebuffer device number\n");
-	printf("      -r         = fill framebuffer with red\n");
-	printf("      -g         = fill framebuffer with green\n");
-	printf("      -b         = fill framebuffer with blue\n");
-	printf("      -w         = fill framebuffer with white\n");
-	printf("      -p pattern = fill framebuffer with pattern number\n");
+	printf("Usage: fb-string x y string color bg_color\n");
+	printf("Where x          = x position of the top left corner\n");
+	printf("      y          = y position of the top left corner\n");
+	printf("      string     = String to display\n");
+	printf("      color      = Text Color\n");
+	printf("      bg_color   = background Color\n");
 }
 
 int main(int argc, char **argv)
 {
-	int opt;
 	int req_fb = 0;
-	int req_pattern = 0;
-
-	printf("fb-test %d.%d.%d (%s)\n", VERSION, PATCHLEVEL, SUBLEVEL,
-		VERSION_NAME);
-
-	while ((opt = getopt(argc, argv, "hrgbwp:f:")) != -1) {
-		switch (opt) {
-		case 'f':
-			req_fb = atoi(optarg);
-			break;
-		case 'p':
-			req_pattern = atoi(optarg);
-			break;
-		case 'r':
-			req_pattern = 1;
-			break;
-		case 'g':
-			req_pattern = 2;
-			break;
-		case 'b':
-			req_pattern = 3;
-			break;
-		case 'w':
-			req_pattern = 4;
-			break;
-		case 'h':
-			show_help();
-			return 0;
-		default:
-			exit(EXIT_FAILURE);
-		}
-	}
+	int color, bg_color, x, y;
+	
+	if (argc != 6)
+	  {
+	    show_help();
+	    return EXIT_FAILURE;
+	  }
 
 	fb_open(req_fb, &fb_info);
+	if (!fb_info.ptr)
+	  return EXIT_FAILURE;
 
-	do_fill_screen(&fb_info, req_pattern);
+	x = atoi(argv[2]);
+	y = atoi(argv[3]);
+	color =  atoi(argv[4]);
+	bg_color = atoi(argv[5]);
 
-	return 0;
+	fill_screen_solid(&fb_info, bg_color);
+	fb_put_string(&fb_info, x, y, argv[3], strlen(argv[3]), color , 0, 0);
+
+	return EXIT_SUCCESS;
 }
