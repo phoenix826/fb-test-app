@@ -71,6 +71,19 @@ static void draw_pixel(struct fb_info *fb_info, int x, int y, unsigned color)
 		p += x;
 
 		*p = c;
+	} else if (fb_info->var.bits_per_pixel == 24) {
+		unsigned int *p;
+		unsigned c;
+
+		fbmem += fb_info->fix.line_length * y;
+		fbmem += 3 * x;
+
+		p = fbmem;
+
+        c = *p;
+        c = (c & 0xFF000000) | (color & 0x00FFFFFF);
+
+		*p = c;
 	} else {
 		unsigned int *p;
 
@@ -180,10 +193,10 @@ int main(int argc, char **argv)
 	if (!fb_info.ptr)
 	  return EXIT_FAILURE;
 
-	x = atoi(argv[2]);
-	y = atoi(argv[3]);
-	color =  atoi(argv[4]);
-	bg_color = atoi(argv[5]);
+	x = strtoul(argv[1], NULL, 0);
+	y = strtoul(argv[2], NULL, 0);
+	color =  strtoul(argv[4], NULL, 0);
+	bg_color = strtoul(argv[5], NULL, 0);
 
 	fill_screen_solid(&fb_info, bg_color);
 	fb_put_string(&fb_info, x, y, argv[3], strlen(argv[3]), color , 0, 0);

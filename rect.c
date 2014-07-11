@@ -130,6 +130,19 @@ static void draw_pixel(void *fbmem, int x, int y, unsigned int color)
 		p += x;
 
 		*p = c;
+	} else if (var.bits_per_pixel == 24) {
+		unsigned int *p;
+		unsigned c;
+
+		fbmem += fix.line_length * y;
+		fbmem += 3 * x;
+
+		p = fbmem;
+
+        c = *p;
+        c = (c & 0xFF000000) | (color & 0x00FFFFFF);
+
+		*p = c;
 	} else {
 		unsigned int *p;
 
