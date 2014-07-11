@@ -193,10 +193,10 @@ int main(int argc, char **argv)
 	if (!fb_info.ptr)
 	  return EXIT_FAILURE;
 
-	x = atoi(argv[2]);
-	y = atoi(argv[3]);
-	color =  atoi(argv[4]);
-	bg_color = atoi(argv[5]);
+	x = strtoul(argv[1], NULL, 0);
+	y = strtoul(argv[2], NULL, 0);
+	color =  strtoul(argv[4], NULL, 0);
+	bg_color = strtoul(argv[5], NULL, 0);
 
 	fill_screen_solid(&fb_info, bg_color);
 	fb_put_string(&fb_info, x, y, argv[3], strlen(argv[3]), color , 0, 0);
