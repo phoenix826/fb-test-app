@@ -94,8 +94,8 @@ static void draw_pixel(struct fb_info *fb_info, int x, int y, unsigned color)
 static void fill_screen(struct fb_info *fb_info)
 {
 	unsigned x, y;
-	unsigned h = fb_info->var.yres_virtual;
-	unsigned w = fb_info->var.xres_virtual;
+	unsigned h = fb_info->var.yres;
+	unsigned w = fb_info->var.xres;
 
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
@@ -153,8 +153,8 @@ void fill_screen_solid(struct fb_info *fb_info, unsigned int color)
 {
 
 	unsigned x, y;
-	unsigned h = fb_info->var.yres_virtual;
-	unsigned w = fb_info->var.xres_virtual;
+	unsigned h = fb_info->var.yres;
+	unsigned w = fb_info->var.xres;
 
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++)

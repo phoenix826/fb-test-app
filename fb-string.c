@@ -101,8 +101,8 @@ void fill_screen_solid(struct fb_info *fb_info, unsigned int color)
 {
 
 	unsigned x, y;
-	unsigned h = fb_info->var.yres_virtual;
-	unsigned w = fb_info->var.xres_virtual;
+	unsigned h = fb_info->var.yres;
+	unsigned w = fb_info->var.xres;
 
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++)

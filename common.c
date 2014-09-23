@@ -58,7 +58,6 @@ void fb_open(int fb_num, struct fb_info *fb_info)
 			fb_info->var.xres, fb_info->var.yres,
 			fb_info->var.xres_virtual, fb_info->var.yres_virtual,
 			fb_info->fix.line_length, fb_info->var.bits_per_pixel);
-	printf("dim %dmm x %dmm\n", fb_info->var.width, fb_info->var.height);
 
 	void *ptr = mmap(0,
 			fb_info->var.yres_virtual * fb_info->fix.line_length,
