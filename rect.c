@@ -248,5 +248,7 @@ int main(int argc, char **argv)
 		fill_rect(ptr, &r);
 	}
 
+	free(readbuf);
+
 	return 0;
 }
