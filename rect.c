@@ -240,14 +240,12 @@ int main(int argc, char **argv)
 	fill_screen(ptr);
 
 	for (i = 0; 1 || i < 10000; i++) {
-		unsigned color;
-
 		get_rand_rect(&r,
 				var.xres_virtual, var.yres_virtual,
 				2, 0,
 				var.xres_virtual, var.yres_virtual);
 
-		color = fill_rect(ptr, &r);
+		fill_rect(ptr, &r);
 	}
 
 	return 0;
