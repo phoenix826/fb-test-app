@@ -1,8 +1,8 @@
 VERSION = 1
-PATCHLEVEL = 0
+PATCHLEVEL = 1
 SUBLEVEL = 0
 EXTRAVERSION = .git
-NAME = tablet_rosa
+NAME = rosetta
 
 ifdef CROSS_COMPILE
 	CC=$(CROSS_COMPILE)gcc
