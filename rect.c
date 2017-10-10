@@ -202,6 +202,13 @@ void fill_screen(void *fbmem)
 	}
 }
 
+void show_help(void)
+{
+	printf("Usage: fb-test-rect -f fbnum -s seed\n");
+	printf("Where -f fbnum   = framebuffer device number\n");
+	printf("      -s seed    = seed for srand()\n");
+}
+
 int main(int argc, char **argv)
 {
 	int fd;
@@ -209,11 +216,32 @@ int main(int argc, char **argv)
 	int i;
 	void *readbuf;
 	unsigned readbuf_size;
+	int opt;
+	int fb = 0;
+	int seed = 0;
+	char str[256];
 
 	printf("rect %d.%d.%d (%s)\n", VERSION, PATCHLEVEL, SUBLEVEL,
 		VERSION_NAME);
 
-	fd = open_fb("/dev/fb0");
+	while ((opt = getopt(argc, argv, "hf:s:")) != -1) {
+		switch (opt) {
+		case 'f':
+			fb = atoi(optarg);
+			break;
+		case 's':
+			seed = atoi(optarg);
+			break;
+		case 'h':
+			show_help();
+			return 0;
+		default:
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	sprintf(str, "/dev/fb%d", fb);
+	fd = open_fb(str);
 
 	FBCTL(FBIOGET_VSCREENINFO, &var);
 	FBCTL(FBIOGET_FSCREENINFO, &fix);
@@ -230,8 +258,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (argc > 1) {
-		int seed = atoi(argv[1]);
+	if (seed) {
 		srand(seed);
 	} else {
 		srand((unsigned int)time(NULL) + getpid());
