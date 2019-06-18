@@ -31,19 +31,13 @@
 #include <sys/mman.h>
 
 #include <linux/fb.h>
-#include <linux/kd.h>
 
 #include "common.h"
 
 void fb_open(int fb_num, struct fb_info *fb_info)
 {
 	char str[64];
-	int fd,tty;
-
-	tty = open("/dev/tty1", O_RDWR);
-
-	if(ioctl(tty, KDSETMODE, KD_GRAPHICS) == -1)
-		printf("Failed to set graphics mode on tty1\n");
+	int fd;
 
 	sprintf(str, "/dev/fb%d", fb_num);
 	fd = open(str, O_RDWR);
