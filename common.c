@@ -124,8 +124,18 @@ int fb_put_string(struct fb_info *fb_info, int x, int y, char *s, int maxlen,
 		fb_clear_area(fb_info, x, y, clearlen * 8, 8);
 
 	for (i = 0; i < strlen(s) && i < maxlen; i++) {
-		fb_put_char(fb_info, (x + 8 * i), y, s[i], color);
+		if (s[i] == '\n') {
+			x = 0;
+			y +=16;
+			continue;
+		}
+		fb_put_char(fb_info, x, y, s[i], color);
+		x += 8;
 		w += 8;
+		if ((x+8) > fb_info->var.xres) {
+			x = 0;
+			y += 16;
+		}
 	}
 
 	return w;
