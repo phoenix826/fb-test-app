@@ -6,6 +6,7 @@ NAME = rosetta
 
 ifdef CROSS_COMPILE
 	CC=$(CROSS_COMPILE)gcc
+	AR=$(CROSS_COMPILE)ar
 	CFLAGS=-O2 -Wall
 else
 	CFLAGS=-O2 -Wall
@@ -17,14 +18,14 @@ override CFLAGS += -DSUBLEVEL=$(SUBLEVEL)
 override CFLAGS += -DVERSION_NAME=\"$(NAME)\"
 
 PROGS = perf rect fb-test offset fb-string
+LIBFBTEST = libfbtest.a
 
-all: $(PROGS)
+all: $(LIBFBTEST) $(PROGS)
 
-.c.o: common.h font.h
+$(LIBFBTEST): common.o font_8x8.o
+	$(AR) rcs $@ $^
 
-fb-test: fb-test.o common.o font_8x8.o
-
-fb-string: fb-string.o common.o font_8x8.o
+LDLIBS += $(LIBFBTEST)
 
 clean:
-	rm -f $(PROGS) *.o
+	rm -f $(PROGS) $(LIBFBTEST) *.o
