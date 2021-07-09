@@ -41,8 +41,17 @@ static void draw_pixel(struct fb_info *fb_info, int x, int y, unsigned color)
 	void *fbmem;
 
 	fbmem = fb_info->ptr;
+	if (fb_info->var.bits_per_pixel == 8) {
+		unsigned char *p;
 
-	if (fb_info->var.bits_per_pixel == 16) {
+		fbmem += fb_info->fix.line_length * y;
+
+		p = fbmem;
+
+		p += x;
+
+		*p = color;
+	} else if (fb_info->var.bits_per_pixel == 16) {
 		unsigned short c;
 		unsigned r = (color >> 16) & 0xff;
 		unsigned g = (color >> 8) & 0xff;
@@ -62,6 +71,13 @@ static void draw_pixel(struct fb_info *fb_info, int x, int y, unsigned color)
 		p += x;
 
 		*p = c;
+	} else if (fb_info->var.bits_per_pixel == 24) {
+		 unsigned char *p;
+
+		p = (unsigned char *)fbmem + fb_info->fix.line_length * y + 3 * x;
+		*p++ = color;
+		*p++ = color >> 8;
+		*p = color >> 16;
 	} else {
 		unsigned int *p;
 
@@ -78,8 +94,8 @@ static void draw_pixel(struct fb_info *fb_info, int x, int y, unsigned color)
 static void fill_screen(struct fb_info *fb_info)
 {
 	unsigned x, y;
-	unsigned h = fb_info->var.yres_virtual;
-	unsigned w = fb_info->var.xres_virtual;
+	unsigned h = fb_info->var.yres;
+	unsigned w = fb_info->var.xres;
 
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
@@ -137,8 +153,8 @@ void fill_screen_solid(struct fb_info *fb_info, unsigned int color)
 {
 
 	unsigned x, y;
-	unsigned h = fb_info->var.yres_virtual;
-	unsigned w = fb_info->var.xres_virtual;
+	unsigned h = fb_info->var.yres;
+	unsigned w = fb_info->var.xres;
 
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++)

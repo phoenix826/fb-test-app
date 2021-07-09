@@ -100,7 +100,17 @@ static struct rect *get_rand_rect(struct rect *r,
 
 static void draw_pixel(void *fbmem, int x, int y, unsigned int color)
 {
-	if (var.bits_per_pixel == 16) {
+      if (var.bits_per_pixel == 8) {
+		unsigned char *p;
+
+		fbmem += fix.line_length * y;
+
+		p = fbmem;
+
+		p += x;
+
+		*p = color;
+	} else if (var.bits_per_pixel == 16) {
 		unsigned short c;
 		int r = (color >> 16) & 0xff;
 		int g = (color >> 8) & 0xff;
@@ -118,6 +128,19 @@ static void draw_pixel(void *fbmem, int x, int y, unsigned int color)
 		p = fbmem;
 
 		p += x;
+
+		*p = c;
+	} else if (var.bits_per_pixel == 24) {
+		unsigned int *p;
+		unsigned c;
+
+		fbmem += fix.line_length * y;
+		fbmem += 3 * x;
+
+		p = fbmem;
+
+        c = *p;
+        c = (c & 0xFF000000) | (color & 0x00FFFFFF);
 
 		*p = c;
 	} else {
@@ -179,6 +202,13 @@ void fill_screen(void *fbmem)
 	}
 }
 
+void show_help(void)
+{
+	printf("Usage: fb-test-rect -f fbnum -s seed\n");
+	printf("Where -f fbnum   = framebuffer device number\n");
+	printf("      -s seed    = seed for srand()\n");
+}
+
 int main(int argc, char **argv)
 {
 	int fd;
@@ -186,11 +216,32 @@ int main(int argc, char **argv)
 	int i;
 	void *readbuf;
 	unsigned readbuf_size;
+	int opt;
+	int fb = 0;
+	int seed = 0;
+	char str[256];
 
 	printf("rect %d.%d.%d (%s)\n", VERSION, PATCHLEVEL, SUBLEVEL,
 		VERSION_NAME);
 
-	fd = open_fb("/dev/fb0");
+	while ((opt = getopt(argc, argv, "hf:s:")) != -1) {
+		switch (opt) {
+		case 'f':
+			fb = atoi(optarg);
+			break;
+		case 's':
+			seed = atoi(optarg);
+			break;
+		case 'h':
+			show_help();
+			return 0;
+		default:
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	sprintf(str, "/dev/fb%d", fb);
+	fd = open_fb(str);
 
 	FBCTL(FBIOGET_VSCREENINFO, &var);
 	FBCTL(FBIOGET_FSCREENINFO, &fix);
@@ -207,8 +258,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (argc > 1) {
-		int seed = atoi(argv[1]);
+	if (seed) {
 		srand(seed);
 	} else {
 		srand((unsigned int)time(NULL) + getpid());
@@ -217,15 +267,15 @@ int main(int argc, char **argv)
 	fill_screen(ptr);
 
 	for (i = 0; 1 || i < 10000; i++) {
-		unsigned color;
-
 		get_rand_rect(&r,
 				var.xres_virtual, var.yres_virtual,
 				2, 0,
 				var.xres_virtual, var.yres_virtual);
 
-		color = fill_rect(ptr, &r);
+		fill_rect(ptr, &r);
 	}
+
+	free(readbuf);
 
 	return 0;
 }

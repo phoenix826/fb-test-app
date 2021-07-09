@@ -48,11 +48,10 @@ void fb_open(int fb_num, struct fb_info *fb_info)
 	IOCTL1(fd, FBIOGET_VSCREENINFO, &fb_info->var);
 	IOCTL1(fd, FBIOGET_FSCREENINFO, &fb_info->fix);
 
-	printf("fb res %dx%d virtual %dx%d, line_len %d\n",
+	printf("fb res %dx%d virtual %dx%d, line_len %d, bpp %d\n",
 			fb_info->var.xres, fb_info->var.yres,
 			fb_info->var.xres_virtual, fb_info->var.yres_virtual,
-			fb_info->fix.line_length);
-	printf("dim %dmm x %dmm\n", fb_info->var.width, fb_info->var.height);
+			fb_info->fix.line_length, fb_info->var.bits_per_pixel);
 
 	void *ptr = mmap(0,
 			fb_info->var.yres_virtual * fb_info->fix.line_length,
@@ -83,6 +82,7 @@ static void fb_put_char(struct fb_info *fb_info, int x, int y, char c,
 		unsigned color)
 {
 	int i, j, bits, loc;
+	unsigned char *p8;
 	unsigned short *p16;
 	unsigned int *p32;
 	struct fb_var_screeninfo *var = &fb_info->var;
@@ -96,6 +96,9 @@ static void fb_put_char(struct fb_info *fb_info, int x, int y, char c,
 			if (loc >= 0 && loc < fix->smem_len &&
 					((bits >> (7 - j)) & 1)) {
 				switch (var->bits_per_pixel) {
+				case 8:
+					p8 =  fb_info->ptr + loc;
+					*p8 = color;
 				case 16:
 					p16 = fb_info->ptr + loc;
 					*p16 = color;
@@ -121,8 +124,18 @@ int fb_put_string(struct fb_info *fb_info, int x, int y, char *s, int maxlen,
 		fb_clear_area(fb_info, x, y, clearlen * 8, 8);
 
 	for (i = 0; i < strlen(s) && i < maxlen; i++) {
-		fb_put_char(fb_info, (x + 8 * i), y, s[i], color);
+		if (s[i] == '\n') {
+			x = 0;
+			y +=16;
+			continue;
+		}
+		fb_put_char(fb_info, x, y, s[i], color);
+		x += 8;
 		w += 8;
+		if ((x+8) > fb_info->var.xres) {
+			x = 0;
+			y += 16;
+		}
 	}
 
 	return w;

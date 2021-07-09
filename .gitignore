@@ -1,3 +1,4 @@
+*.a
 *.o
 perf
 rect
@@ -5,3 +6,4 @@ fb-test
 offset
 pan
 ovl
+fb-string
